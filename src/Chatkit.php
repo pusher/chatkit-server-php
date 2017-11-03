@@ -159,4 +159,116 @@ class Chatkit
         }
     }
 
+
+    public function create_user($id, $name, $avatar_url = null, $custom_data = null)
+    {
+        $body = array(
+            "id" => $id,
+            "name" => $name
+        );
+
+        if (!is_null($avatar_url)) {
+            $body['avatar_url'] = $avatar_url;
+        }
+
+        if (!is_null($custom_data)) {
+            $body['custom_data'] = $custom_data;
+        }
+
+        $ch = $this->create_curl(
+            $this->api_settings,
+            "/users",
+            $this->get_server_token(),
+            "POST",
+            $body
+        );
+
+        $response = $this->exec_curl($ch);
+        return $response;
+    }
+
+    /**
+     * Utility function used to create the curl object with common settings.
+     */
+    private function create_curl($service_settings, $path, $jwt, $request_method, $body = NULL, $query_params = array())
+    {
+        $split_instance_locator = explode(":", $this->settings['instance_locator']);
+
+        $scheme = "https";
+        $host = $split_instance_locator[1].".pusherplatform.io";
+        $service_path_fragment = $service_settings['service_name']."/".$service_settings['service_version'];
+        $instance_id = $split_instance_locator[2];
+
+        $full_url = $scheme."://".$host."/services/".$service_path_fragment."/".$instance_id.$path;
+        $query_string = http_build_query($query_params);
+        $final_url = $full_url."?".$query_string;
+
+        $this->log('INFO: create_curl( '.$final_url.' )');
+
+        // Create or reuse existing curl handle
+        if (null === $this->ch) {
+            $this->ch = curl_init();
+        }
+
+        if ($this->ch === false) {
+            throw new ChatkitException('Could not initialise cURL!');
+        }
+
+        $ch = $this->ch;
+
+        // curl handle is not reusable unless reset
+        if (function_exists('curl_reset')) {
+            curl_reset($ch);
+        }
+
+        // Set cURL opts and execute request
+        curl_setopt($ch, CURLOPT_URL, $full_url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json',
+            "Authorization: Bearer ".$jwt
+        ));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $this->settings['timeout']);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request_method);
+
+        if (!is_null($body)) {
+            $json_encoded_body = json_encode($body);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $json_encoded_body);
+        }
+
+        // Set custom curl options
+        if (!empty($this->settings['curl_options'])) {
+            foreach ($this->settings['curl_options'] as $option => $value) {
+                curl_setopt($ch, $option, $value);
+            }
+        }
+
+        return $ch;
+    }
+
+    private function get_server_token() {
+        return $this->generate_access_token(array(
+            "su" => true,
+            "user_id" => "_superuser"
+        ));
+    }
+
+    /**
+     * Utility function to execute curl and create capture response information.
+     */
+    private function exec_curl($ch)
+    {
+        $response = array();
+
+        $response['body'] = curl_exec($ch);
+        $response['status'] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if ($response['body'] === false || $response['status'] < 200 || 400 <= $response['status']) {
+            $this->log('ERROR: exec_curl error: '.curl_error($ch));
+        }
+
+        $this->log('INFO: exec_curl response: '.print_r($response, true));
+
+        return $response;
+    }
 }

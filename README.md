@@ -50,3 +50,23 @@ $chatkit->generate_token_pair(array(
 ))
 ```
 
+## Creating a user
+
+To create a user you must provide an `id` and a `name`. You can optionally provide an `avatar_url (string)` and `custom_data (array)`.
+
+```php
+$chatkit->create_user("ham", "Hamilton Chapman")
+```
+
+Or with an `avatar_url` and `custom_data`:
+
+```php
+$chatkit->create_user(
+  "ham",
+  "Hamilton Chapman"
+  "http://cat.com/cat.jpg",
+  array(
+    "my_custom_key" => "some data"
+  )
+)
+```
