@@ -209,7 +209,7 @@ class Chatkit
             $this->api_settings,
             "/users/" . $id,
             $this->get_server_token(),
-            "POST",
+            "PUT",
             $body
         );
 
