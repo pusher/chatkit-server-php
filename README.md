@@ -70,3 +70,24 @@ $chatkit->create_user(
   )
 )
 ```
+
+## Updating a user
+
+To update a user you must provide an `id`. You can optionally provide a `name`, an `avatar_url (string)` and `custom_data (array)` but you must include one of those three.
+
+```php
+$chatkit->update_user("ham", "Hamilton Chapman")
+```
+
+Or with an `avatar_url` and `custom_data`:
+
+```php
+$chatkit->create_user(
+  "ham",
+  "Hamilton Chapman"
+  "http://cat.com/cat.jpg",
+  array(
+    "my_custom_key" => "some data"
+  )
+)
+```
