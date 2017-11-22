@@ -222,6 +222,32 @@ class Chatkit
         return $response;
     }
 
+    public function send_message($id, $room_id, $text)
+    {
+        $body = array(
+            'text' => $text
+        );
+
+        if (empty($body['text'])) {
+            throw new ChatkitException('A message text is required.');
+        }
+
+        $token = $this->generate_token(array(
+            'user_id' => $id
+        ));
+
+        $ch = $this->create_curl(
+            $this->api_settings,
+            '/rooms/' . $room_id . '/messages',
+            $token,
+            'POST',
+            $body
+        );
+
+        $response = $this->exec_curl($ch);
+        return $response;
+    }
+
     /**
      * Utility function used to create the curl object with common settings.
      */

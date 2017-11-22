@@ -73,7 +73,7 @@ $chatkit->create_user(
 
 ## Updating a user
 
-To create a user you must provide an `id`. You can optionally provide a `name (string)`, an `avatar_url (string)` and `custom_data (array)`. One of the three optional fields must be provided.
+To update a user you must provide an `id`. You can optionally provide a `name (string)`, an `avatar_url (string)` and `custom_data (array)`. One of the three optional fields must be provided.
 
 ```php
 $chatkit->update_user("ham", "Hamilton Chapman")
@@ -91,3 +91,12 @@ $chatkit->update_user(
   )
 )
 ```
+
+## Send a message
+
+To send a message you must provide a user `id`, a `room_id` and the `text`.
+
+```php
+$chatkit->send_message(1001, "This is a wonderful message.")
+```
+
