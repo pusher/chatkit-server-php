@@ -187,6 +187,67 @@ class Chatkit
         return $response;
     }
 
+    public function update_user($id, $name = null, $avatar_url = null, $custom_data = null)
+    {
+        $body = array();
+
+        if (!is_null($name)) {
+            $body['name'] = $name;
+        }
+        if (!is_null($avatar_url)) {
+            $body['avatar_url'] = $avatar_url;
+        }
+        if (!is_null($custom_data)) {
+            $body['custom_data'] = $custom_data;
+        }
+
+        if (empty($body)) {
+            throw new ChatkitException('At least one of the following are required: name, avatar_url, or custom_data.');
+        }
+
+        $token = $this->generate_token(array(
+            'user_id' => $id,
+            'su' => true
+        ));
+
+        $ch = $this->create_curl(
+            $this->api_settings,
+            "/users/" . $id,
+            $token,
+            "PUT",
+            $body
+        );
+
+        $response = $this->exec_curl($ch);
+        return $response;
+    }
+
+    public function send_message($id, $room_id, $text)
+    {
+        $body = array(
+            'text' => $text
+        );
+
+        if (empty($body['text'])) {
+            throw new ChatkitException('A message text is required.');
+        }
+
+        $token = $this->generate_token(array(
+            'user_id' => $id
+        ));
+
+        $ch = $this->create_curl(
+            $this->api_settings,
+            '/rooms/' . $room_id . '/messages',
+            $token,
+            'POST',
+            $body
+        );
+
+        $response = $this->exec_curl($ch);
+        return $response;
+    }
+
     /**
      * Utility function used to create the curl object with common settings.
      */
