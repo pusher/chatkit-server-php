@@ -6,18 +6,18 @@ use \Firebase\JWT\JWT;
 
 class Chatkit
 {
-    private $settings = array(
+    protected $settings = array(
         'scheme'       => 'https',
         'port'         => 80,
         'timeout'      => 30,
         'debug'        => false,
         'curl_options' => array(),
     );
-    private $logger = null;
-    private $ch = null; // Curl handler
+    protected $logger = null;
+    protected $ch = null; // Curl handler
 
-    private $api_settings = array();
-    private $authorizer_settings = array();
+    protected $api_settings = array();
+    protected $authorizer_settings = array();
 
     /**
      *
@@ -134,7 +134,7 @@ class Chatkit
      *
      * @return void
      */
-    private function log($msg)
+    protected function log($msg)
     {
         if (is_null($this->logger) === false) {
             $this->logger->log('Chatkit: '.$msg);
@@ -148,7 +148,7 @@ class Chatkit
      *
      * @return void
      */
-    private function check_compatibility()
+    protected function check_compatibility()
     {
         if (!extension_loaded('curl')) {
             throw new ChatkitException('The Chatkit library requires the PHP cURL module. Please ensure it is installed');
@@ -251,7 +251,7 @@ class Chatkit
     /**
      * Utility function used to create the curl object with common settings.
      */
-    private function create_curl($service_settings, $path, $jwt, $request_method, $body = NULL, $query_params = array())
+    protected function create_curl($service_settings, $path, $jwt, $request_method, $body = NULL, $query_params = array())
     {
         $split_instance_locator = explode(":", $this->settings['instance_locator']);
 
@@ -307,7 +307,7 @@ class Chatkit
         return $ch;
     }
 
-    private function get_server_token() {
+    protected function get_server_token() {
         return $this->generate_access_token(array(
             "su" => true,
             "user_id" => "_superuser"
@@ -317,7 +317,7 @@ class Chatkit
     /**
      * Utility function to execute curl and create capture response information.
      */
-    private function exec_curl($ch)
+    protected function exec_curl($ch)
     {
         $response = array();
 
