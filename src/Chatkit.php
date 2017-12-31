@@ -310,7 +310,7 @@ class Chatkit
     protected function get_server_token() {
         return $this->generate_access_token(array(
             "su" => true,
-            "user_id" => "_superuser"
+            "user_id" => "chatkit-dashboard"
         ));
     }
 
