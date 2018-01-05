@@ -222,6 +222,49 @@ class Chatkit
         return $response;
     }
 
+    /**
+     * Creates a new room.
+     *
+     * @param array $options  The room options
+     *                          [Available Options]
+     *                          • name (string|optional): Represents the name with which the room is identified.
+     *                              A room name must not be longer than 40 characters and can only contain lowercase letters,
+     *                              numbers, underscores and hyphens.
+     *                          • private (boolean|optional): Indicates if a room should be private or public. Private by default.
+     *                          • user_ids (array|optional): If you wish to add users to the room at the point of creation,
+     *                              you may provide their user IDs.
+     * @return array
+     */
+    public function create_room($user_id, array $options = [])
+    {
+        if (is_null($user_id)) {
+            throw new ChatkitException('You must provide the ID of the user that you wish to create the room');
+        }
+        $body = [];
+
+        if (isset($options['name'])) {
+            $body['name'] = (string) $options['name'];
+        }
+
+        if (isset($options['private'])) {
+            $body['private'] = (bool) $options['private'];
+        }
+
+        if (isset($options['user_ids'])) {
+            $body['user_ids'] = (array) $options['user_ids'];
+        }
+
+        $ch = $this->create_curl(
+            $this->api_settings,
+            '/rooms',
+            $this->get_server_token($user_id),
+            'POST',
+            $body
+        );
+
+        return $this->exec_curl($ch);
+    }
+
     public function send_message($id, $room_id, $text)
     {
         $body = array(
@@ -307,11 +350,13 @@ class Chatkit
         return $ch;
     }
 
-    protected function get_server_token() {
-        return $this->generate_access_token(array(
-            "su" => true,
-            "user_id" => "_superuser"
-        ));
+    protected function get_server_token($user_id = null)
+    {
+        $token_options = array("su" => true);
+        if (!is_null($user_id)) {
+            $token_options['user_id'] = $user_id;
+        }
+        return $this->generate_access_token($token_options);
     }
 
     /**
