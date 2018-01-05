@@ -235,8 +235,11 @@ class Chatkit
      *                              you may provide their user IDs.
      * @return array
      */
-    public function create_room(array $options = [])
+    public function create_room($user_id, array $options = [])
     {
+        if (is_null($user_id)) {
+            throw new ChatkitException('You must provide the ID of the user that you wish to create the room');
+        }
         $body = [];
 
         if (isset($options['name'])) {
@@ -254,7 +257,7 @@ class Chatkit
         $ch = $this->create_curl(
             $this->api_settings,
             '/rooms',
-            $this->get_server_token(),
+            $this->get_server_token($user_id),
             'POST',
             $body
         );
@@ -347,11 +350,13 @@ class Chatkit
         return $ch;
     }
 
-    protected function get_server_token() {
-        return $this->generate_access_token(array(
-            "su" => true,
-            "user_id" => "chatkit-dashboard"
-        ));
+    protected function get_server_token($user_id = null)
+    {
+        $token_options = array("su" => true);
+        if (!is_null($user_id)) {
+            $token_options['user_id'] = $user_id;
+        }
+        return $this->generate_access_token($token_options);
     }
 
     /**
