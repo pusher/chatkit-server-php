@@ -35,7 +35,7 @@ class Chatkit
      */
     public function __construct($instance_locator, $key, $options = array())
     {
-        $this->check_compatibility();
+        $this->checkCompatibility();
 
         $this->settings['instance_locator'] = $instance_locator;
         $this->settings['key'] = $key;
@@ -52,10 +52,10 @@ class Chatkit
         }
     }
 
-    public function generate_token_pair($auth_options)
+    public function generateTokenPair($auth_options)
     {
-        $access_token = $this->generate_access_token($auth_options);
-        $refresh_token = $this->generate_refresh_token($auth_options);
+        $access_token = $this->generateAccessToken($auth_options);
+        $refresh_token = $this->generateRefreshToken($auth_options);
 
         return array(
           "access_token" => $access_token,
@@ -65,12 +65,12 @@ class Chatkit
         );
     }
 
-    public function generate_access_token($auth_options)
+    public function generateAccessToken($auth_options)
     {
-        return $this->generate_token($auth_options);
+        return $this->generateToken($auth_options);
     }
 
-    public function generate_refresh_token($auth_options)
+    public function generateRefreshToken($auth_options)
     {
         $merged_auth_options = array(
             "refresh" => true
@@ -78,10 +78,10 @@ class Chatkit
         foreach ($auth_options as $key => $value) {
             $merged_auth_options[$key] = $value;
         }
-        return $this->generate_token($merged_auth_options);
+        return $this->generateToken($merged_auth_options);
     }
 
-    public function generate_token($auth_options)
+    public function generateToken($auth_options)
     {
         $split_instance_locator = explode(":", $this->settings['instance_locator']);
         $split_key = explode(":", $this->settings['key']);
@@ -122,7 +122,7 @@ class Chatkit
      *
      * @return void
      */
-    public function set_logger($logger)
+    public function setLogger($logger)
     {
         $this->logger = $logger;
     }
@@ -148,7 +148,7 @@ class Chatkit
      *
      * @return void
      */
-    protected function check_compatibility()
+    protected function checkCompatibility()
     {
         if (!extension_loaded('curl')) {
             throw new ChatkitException('The Chatkit library requires the PHP cURL module. Please ensure it is installed');
@@ -160,7 +160,7 @@ class Chatkit
     }
 
 
-    public function create_user($id, $name, $avatar_url = null, $custom_data = null)
+    public function createUser($id, $name, $avatar_url = null, $custom_data = null)
     {
         $body = array(
             "id" => $id,
@@ -175,19 +175,19 @@ class Chatkit
             $body['custom_data'] = $custom_data;
         }
 
-        $ch = $this->create_curl(
+        $ch = $this->createCurl(
             $this->api_settings,
             "/users",
-            $this->get_server_token(),
+            $this->getServerToken(),
             "POST",
             $body
         );
 
-        $response = $this->exec_curl($ch);
+        $response = $this->execCurl($ch);
         return $response;
     }
 
-    public function update_user($id, $name = null, $avatar_url = null, $custom_data = null)
+    public function updateUser($id, $name = null, $avatar_url = null, $custom_data = null)
     {
         $body = array();
 
@@ -205,12 +205,12 @@ class Chatkit
             throw new ChatkitException('At least one of the following are required: name, avatar_url, or custom_data.');
         }
 
-        $token = $this->generate_token(array(
+        $token = $this->generateToken(array(
             'user_id' => $id,
             'su' => true
         ));
 
-        $ch = $this->create_curl(
+        $ch = $this->createCurl(
             $this->api_settings,
             "/users/" . $id,
             $token,
@@ -218,7 +218,7 @@ class Chatkit
             $body
         );
 
-        $response = $this->exec_curl($ch);
+        $response = $this->execCurl($ch);
         return $response;
     }
 
@@ -235,7 +235,7 @@ class Chatkit
      *                              you may provide their user IDs.
      * @return array
      */
-    public function create_room($user_id, array $options = [])
+    public function createRoom($user_id, array $options = [])
     {
         if (is_null($user_id)) {
             throw new ChatkitException('You must provide the ID of the user that you wish to create the room');
@@ -254,18 +254,18 @@ class Chatkit
             $body['user_ids'] = (array) $options['user_ids'];
         }
 
-        $ch = $this->create_curl(
+        $ch = $this->createCurl(
             $this->api_settings,
             '/rooms',
-            $this->get_server_token($user_id),
+            $this->getServerToken($user_id),
             'POST',
             $body
         );
 
-        return $this->exec_curl($ch);
+        return $this->execCurl($ch);
     }
 
-    public function send_message($id, $room_id, $text)
+    public function sendMessage($id, $room_id, $text)
     {
         $body = array(
             'text' => $text
@@ -275,11 +275,11 @@ class Chatkit
             throw new ChatkitException('A message text is required.');
         }
 
-        $token = $this->generate_token(array(
+        $token = $this->generateToken(array(
             'user_id' => $id
         ));
 
-        $ch = $this->create_curl(
+        $ch = $this->createCurl(
             $this->api_settings,
             '/rooms/' . $room_id . '/messages',
             $token,
@@ -287,14 +287,14 @@ class Chatkit
             $body
         );
 
-        $response = $this->exec_curl($ch);
+        $response = $this->execCurl($ch);
         return $response;
     }
 
     /**
      * Utility function used to create the curl object with common settings.
      */
-    protected function create_curl($service_settings, $path, $jwt, $request_method, $body = NULL, $query_params = array())
+    protected function createCurl($service_settings, $path, $jwt, $request_method, $body = null, $query_params = array())
     {
         $split_instance_locator = explode(":", $this->settings['instance_locator']);
 
@@ -307,7 +307,7 @@ class Chatkit
         $query_string = http_build_query($query_params);
         $final_url = $full_url."?".$query_string;
 
-        $this->log('INFO: create_curl( '.$final_url.' )');
+        $this->log('INFO: createCurl( '.$final_url.' )');
 
         // Create or reuse existing curl handle
         if (null === $this->ch) {
@@ -350,19 +350,19 @@ class Chatkit
         return $ch;
     }
 
-    protected function get_server_token($user_id = null)
+    protected function getServerToken($user_id = null)
     {
         $token_options = array("su" => true);
         if (!is_null($user_id)) {
             $token_options['user_id'] = $user_id;
         }
-        return $this->generate_access_token($token_options);
+        return $this->generateAccessToken($token_options);
     }
 
     /**
      * Utility function to execute curl and create capture response information.
      */
-    protected function exec_curl($ch)
+    protected function execCurl($ch)
     {
         $response = array();
 
@@ -370,10 +370,10 @@ class Chatkit
         $response['status'] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if ($response['body'] === false || $response['status'] < 200 || 400 <= $response['status']) {
-            $this->log('ERROR: exec_curl error: '.curl_error($ch));
+            $this->log('ERROR: execCurl error: '.curl_error($ch));
         }
 
-        $this->log('INFO: exec_curl response: '.print_r($response, true));
+        $this->log('INFO: execCurl response: '.print_r($response, true));
 
         return $response;
     }

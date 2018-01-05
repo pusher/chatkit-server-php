@@ -1,4 +1,4 @@
-🚨🚨🚨 Very much a work in progress so expect very rough edges! 🚨🚨🚨
+🚨🚨🚨 Very much a work in progress so expect rough edges! 🚨🚨🚨
 
 # Chatkit PHP Server SDK
 
@@ -45,7 +45,7 @@ $chatkit = new Chatkit\Chatkit($instance_locator, $key, array());
 To generate token pair (access token and refresh token) for usage by a Chatkit client use the `generate_token_pair` function.
 
 ```php
-$chatkit->generate_token_pair(array(
+$chatkit->generateTokenPair(array(
   "user_id" => "ham"
 ))
 ```
@@ -55,13 +55,13 @@ $chatkit->generate_token_pair(array(
 To create a user you must provide an `id` and a `name`. You can optionally provide an `avatar_url (string)` and `custom_data (array)`.
 
 ```php
-$chatkit->create_user("ham", "Hamilton Chapman")
+$chatkit->createUser("ham", "Hamilton Chapman")
 ```
 
 Or with an `avatar_url` and `custom_data`:
 
 ```php
-$chatkit->create_user(
+$chatkit->createUser(
   "ham",
   "Hamilton Chapman"
   "http://cat.com/cat.jpg",
@@ -76,13 +76,13 @@ $chatkit->create_user(
 To update a user you must provide an `id`. You can optionally provide a `name (string)`, an `avatar_url (string)` and `custom_data (array)`. One of the three optional fields must be provided.
 
 ```php
-$chatkit->update_user("ham", "Hamilton Chapman")
+$chatkit->updateUser("ham", "Hamilton Chapman")
 ```
 
 Or with an `avatar_url` and `custom_data`:
 
 ```php
-$chatkit->update_user(
+$chatkit->updateUser(
   "ham",
   "Hamilton Chapman"
   "http://cat.com/cat.jpg",
@@ -97,6 +97,14 @@ $chatkit->update_user(
 To send a message you must provide a user `id`, a `room_id` and the `text`.
 
 ```php
-$chatkit->send_message(1001, "This is a wonderful message.")
+$chatkit->sendMessage("sarah", 1001, "This is a wonderful message.")
+```
+
+## Create a room
+
+To create a room you must provide the ID of the user that is creating the room, and then an options array that must contain a `name` and can optionally contain a boolean flag `private` that dictates whether or not the room will be private. You can also provide a list of `user_ids` in this options array, all of which will be added as members of the room upon its creation.
+
+```php
+$chatkit->createRoom("sarah", array("name" => "my room", "private": false, "user_ids": array("tom", "will", "kate")))
 ```
 
