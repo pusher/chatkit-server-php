@@ -291,6 +291,37 @@ class Chatkit
         return $response;
     }
 
+    public function deleteUser($user_id)
+    {
+        $token = $this->getServerToken($user_id);
+
+        $ch = $this->createCurl(
+            $this->api_settings,
+            '/users/' . $user_id,
+            $token,
+            'DELETE'
+        );
+
+        $response = $this->execCurl($ch);
+        return $response;
+    }
+
+    public function getUsersByIds($user_ids)
+    {
+        $token = $this->getServerToken();
+        $user_ids_string = implode(',', $user_ids);
+
+        $ch = $this->createCurl(
+            $this->api_settings,
+            '/users_by_ids' . '?user_ids=' . $user_ids_string,
+            $token,
+            'GET'
+        );
+
+        $response = $this->execCurl($ch);
+        return $response;
+    }
+
     /**
      * Utility function used to create the curl object with common settings.
      */
