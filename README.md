@@ -108,3 +108,18 @@ To create a room you must provide the ID of the user that is creating the room, 
 $chatkit->createRoom("sarah", array("name" => "my room", "private": false, "user_ids": array("tom", "will", "kate")))
 ```
 
+## Delete a user
+
+To delete a user you need to provide the ID of the user to delete.
+
+```php
+$chatkit->deleteUser("sarah")
+```
+
+## Get information about users by IDs
+
+You can get information about a list of users by providing their IDs to `getUsersByIds`.
+
+```php
+$chatkit->getUsersByIds(array("sarah", "tom"))
+```
