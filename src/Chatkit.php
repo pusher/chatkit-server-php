@@ -90,7 +90,7 @@ class Chatkit
 
         $now = time();
         $claims = array(
-            "app" => $split_instance_locator[2],
+            "instance" => $split_instance_locator[2],
             "iss" => "api_keys/".$split_key[0],
             "iat" => $now
         );
