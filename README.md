@@ -105,7 +105,7 @@ $chatkit->sendMessage("sarah", 1001, "This is a wonderful message.")
 To create a room you must provide the ID of the user that is creating the room, and then an options array that must contain a `name` and can optionally contain a boolean flag `private` that dictates whether or not the room will be private. You can also provide a list of `user_ids` in this options array, all of which will be added as members of the room upon its creation.
 
 ```php
-$chatkit->createRoom("sarah", array("name" => "my room", "private": false, "user_ids": array("tom", "will", "kate")))
+$chatkit->createRoom("sarah", array("name" => "my room", "private" => false, "user_ids" => array("tom", "will", "kate")))
 ```
 
 ## Delete a user
