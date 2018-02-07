@@ -86,8 +86,6 @@ class Chatkit
         $split_instance_locator = explode(":", $this->settings['instance_locator']);
         $split_key = explode(":", $this->settings['key']);
 
-        JWT::$leeway = 60;
-
         $now = time();
         $claims = array(
             "instance" => $split_instance_locator[2],
