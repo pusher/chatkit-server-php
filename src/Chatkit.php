@@ -263,6 +263,29 @@ class Chatkit
         return $this->execCurl($ch);
     }
 
+    /**
+     * Get all rooms a user belongs to
+     *
+     * @param $user_id
+     * @param bool|null $joinableOnly If true, return only rooms the user can join
+     * @return array
+     * @throws ChatkitException
+     */
+    public function getUserRooms($user_id, $joinableOnly = null)
+    {
+        $queryParams = $joinableOnly === null ? [] : ['joinable' => $joinableOnly];
+        $ch = $this->createCurl(
+            $this->api_settings,
+            "/users/$user_id/rooms",
+            $this->getServerToken($user_id),
+            'GET',
+            [],
+            $queryParams
+        );
+
+        return $this->execCurl($ch);
+    }
+
     public function sendMessage($id, $room_id, $text)
     {
         $body = array(
