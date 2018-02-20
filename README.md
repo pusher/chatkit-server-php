@@ -16,7 +16,7 @@ Or add to `composer.json`:
 
 ```json
 "require": {
-    "pusher/pusher-chatkit-server": "^0.2.2"
+    "pusher/pusher-chatkit-server": "^0.3.0"
 }
 ```
 
