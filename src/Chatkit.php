@@ -2,6 +2,10 @@
 
 namespace Chatkit;
 
+use Chatkit\Exceptions\ChatkitException;
+use Chatkit\Exceptions\ConfigurationException;
+use Chatkit\Exceptions\ConnectionException;
+use Chatkit\Exceptions\MissingArgumentException;
 use \Firebase\JWT\JWT;
 
 class Chatkit
@@ -149,11 +153,11 @@ class Chatkit
     protected function checkCompatibility()
     {
         if (!extension_loaded('curl')) {
-            throw new ChatkitException('The Chatkit library requires the PHP cURL module. Please ensure it is installed');
+            throw new ConfigurationException('The Chatkit library requires the PHP cURL module. Please ensure it is installed');
         }
 
         if (!extension_loaded('json')) {
-            throw new ChatkitException('The Chatkit library requires the PHP JSON module. Please ensure it is installed');
+            throw new ConfigurationException('The Chatkit library requires the PHP JSON module. Please ensure it is installed');
         }
     }
 
@@ -200,7 +204,7 @@ class Chatkit
         }
 
         if (empty($body)) {
-            throw new ChatkitException('At least one of the following are required: name, avatar_url, or custom_data.');
+            throw new MissingArgumentException('At least one of the following are required: name, avatar_url, or custom_data.');
         }
 
         $token = $this->generateToken(array(
@@ -236,7 +240,7 @@ class Chatkit
     public function createRoom($user_id, array $options = [])
     {
         if (is_null($user_id)) {
-            throw new ChatkitException('You must provide the ID of the user that you wish to create the room');
+            throw new MissingArgumentException('You must provide the ID of the user that you wish to create the room');
         }
         $body = [];
 
@@ -293,7 +297,7 @@ class Chatkit
         );
 
         if (empty($body['text'])) {
-            throw new ChatkitException('A message text is required.');
+            throw new MissingArgumentException('A message text is required.');
         }
 
         $token = $this->generateToken(array(
@@ -367,7 +371,7 @@ class Chatkit
         }
 
         if ($this->ch === false) {
-            throw new ChatkitException('Could not initialise cURL!');
+            throw new ConfigurationException('Could not initialise cURL!');
         }
 
         $ch = $this->ch;
@@ -416,17 +420,21 @@ class Chatkit
      */
     protected function execCurl($ch)
     {
-        $response = array();
+        $response = json_decode(curl_exec($ch), true);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        $response['body'] = curl_exec($ch);
-        $response['status'] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        // inform the user of a connection failure
+        if ($status == 0 || $response === false) {
+            throw new ConnectionException(curl_error($ch));
+        }
 
-        if ($response['body'] === false || $response['status'] < 200 || 400 <= $response['status']) {
-            $this->log('ERROR: execCurl error: '.curl_error($ch));
+        // or an error response from Chatkit
+        if ($status >= 400) {
+            $this->log('ERROR: execCurl error: '.print_r($response, true));
+            throw (new ChatkitException($response['error_description'], $status))->setBody($response);
         }
 
         $this->log('INFO: execCurl response: '.print_r($response, true));
-
         return $response;
     }
 }
