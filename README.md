@@ -1,5 +1,3 @@
-🚨🚨🚨 Very much a work in progress so expect rough edges! 🚨🚨🚨
-
 # Chatkit PHP Server SDK
 
 Find out more about Chatkit [here](https://pusher.com/chatkit).
@@ -16,7 +14,7 @@ Or add to `composer.json`:
 
 ```json
 "require": {
-    "pusher/pusher-chatkit-server": "^0.3.0"
+    "pusher/pusher-chatkit-server": "^0.4.0"
 }
 ```
 
@@ -34,20 +32,20 @@ This library depends on PHP modules for cURL and JSON. See [cURL module installa
 Head to your dashbord to find your `instance_locator` and `key` and use them to create a new `Chatkit\Chatkit` instance.
 
 ```php
-$instance_locator = 'YOUR_INSTANCE_LOCATOR';
-$key = 'YOUR_KEY';
-
-$chatkit = new Chatkit\Chatkit($instance_locator, $key, array());
+$chatkit = new Chatkit\Chatkit([
+  'instance_locator' => 'YOUR_INSTANCE_LOCATOR',
+  'key' => 'YOUR_KEY'
+]);
 ```
 
-## Generating a token pair
+## Authentication
 
-To generate token pair (access token and refresh token) for usage by a Chatkit client use the `generate_token_pair` function.
+To authenticate a user (a Chatkit client) use the `authenticate` function.
 
 ```php
-$chatkit->generateTokenPair(array(
-  "user_id" => "ham"
-))
+$chatkit->authenticate([
+  'user_id' => 'ham'
+]);
 ```
 
 ## Creating a user
@@ -55,20 +53,23 @@ $chatkit->generateTokenPair(array(
 To create a user you must provide an `id` and a `name`. You can optionally provide an `avatar_url (string)` and `custom_data (array)`.
 
 ```php
-$chatkit->createUser("ham", "Hamilton Chapman")
+$chatkit->createUser([
+  'id' => 'ham',
+  'name' => 'Hamilton Chapman'
+]);
 ```
 
 Or with an `avatar_url` and `custom_data`:
 
 ```php
-$chatkit->createUser(
-  "ham",
-  "Hamilton Chapman"
-  "http://cat.com/cat.jpg",
-  array(
-    "my_custom_key" => "some data"
-  )
-)
+$chatkit->createUser([
+  'id' => 'ham',
+  'name' => 'Hamilton Chapman',
+  'avatar_url' => 'https://placekitten.com/200/300',
+  'custom_data' => [
+    'my_custom_key' => 'some data'
+  ]
+]);
 ```
 
 ## Updating a user
@@ -76,20 +77,23 @@ $chatkit->createUser(
 To update a user you must provide an `id`. You can optionally provide a `name (string)`, an `avatar_url (string)` and `custom_data (array)`. One of the three optional fields must be provided.
 
 ```php
-$chatkit->updateUser("ham", "Hamilton Chapman")
+$chatkit->updateUser([
+  'id' => 'ham',
+  'name' => 'Someone Else'
+]);
 ```
 
 Or with an `avatar_url` and `custom_data`:
 
 ```php
-$chatkit->updateUser(
-  "ham",
-  "Hamilton Chapman"
-  "http://cat.com/cat.jpg",
-  array(
-    "my_custom_key" => "some data"
-  )
-)
+$chatkit->updateUser([
+  'id' => 'ham',
+  'name' => 'Someone Else',
+  'avatar_url' => 'https://placekitten.com/400/500',
+  'custom_data' => [
+    'my_custom_key' => 'some other data'
+  ]
+]);
 ```
 
 ## Send a message
@@ -97,7 +101,11 @@ $chatkit->updateUser(
 To send a message you must provide a user `id`, a `room_id` and the `text`.
 
 ```php
-$chatkit->sendMessage("sarah", 1001, "This is a wonderful message.")
+$chatkit->sendMessage([
+  'sender_id' => 'sarah',
+  'room_id' => 1001,
+  'text' => 'This is a wonderful message.'
+]);
 ```
 
 ## Create a room
@@ -105,7 +113,12 @@ $chatkit->sendMessage("sarah", 1001, "This is a wonderful message.")
 To create a room you must provide the ID of the user that is creating the room, and then an options array that must contain a `name` and can optionally contain a boolean flag `private` that dictates whether or not the room will be private. You can also provide a list of `user_ids` in this options array, all of which will be added as members of the room upon its creation.
 
 ```php
-$chatkit->createRoom("sarah", array("name" => "my room", "private" => false, "user_ids" => array("tom", "will", "kate")))
+$chatkit->createRoom([
+  'creator_id' => 'sarah',
+  'name' => 'my room',
+  'private' => false,
+  'user_ids' => ['tom', 'will', 'kate']
+]);
 ```
 
 ## Delete a user
@@ -113,7 +126,7 @@ $chatkit->createRoom("sarah", array("name" => "my room", "private" => false, "us
 To delete a user you need to provide the ID of the user to delete.
 
 ```php
-$chatkit->deleteUser("sarah")
+$chatkit->deleteUser([ 'id' => 'sarah' ]);
 ```
 
 ## Get information about users by IDs
@@ -121,5 +134,5 @@ $chatkit->deleteUser("sarah")
 You can get information about a list of users by providing their IDs to `getUsersByIds`.
 
 ```php
-$chatkit->getUsersByIds(array("sarah", "tom"))
+$chatkit->getUsersByIds([ 'user_ids' => ['sarah', 'tom'] ]);
 ```
