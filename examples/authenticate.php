@@ -7,4 +7,9 @@ $chatkit = new Chatkit\Chatkit([
   'key' => 'your:key'
 ]);
 
-print_r($chatkit->authenticate([ 'user_id' => 'ham' ]));
+$auth_data = $chatkit->authenticate([ 'user_id' => 'ham' ]);
+
+print_r($auth_data);
+
+print($auth_data['status']);
+print(json_encode($auth_data['body']));
