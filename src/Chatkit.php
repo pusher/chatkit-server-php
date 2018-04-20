@@ -28,13 +28,13 @@ class Chatkit
      * Initializes a new Chatkit instance.
      *
      *
-     * @param array $options           Options to configure the Chatkit instance.
-     *                                 instance_locator - your Chatkit instance locator
-     *                                 key - your Chatkit instance's key
-     *                                 scheme - e.g. http or https
-     *                                 host - the host; no trailing forward slash.
-     *                                 port - the http port
-     *                                 timeout - the http timeout
+     * @param array $options   Options to configure the Chatkit instance.
+     *                         instance_locator - your Chatkit instance locator
+     *                         key - your Chatkit instance's key
+     *                         scheme - e.g. http or https
+     *                         host - the host; no trailing forward slash.
+     *                         port - the http port
+     *                         timeout - the http timeout
      */
     public function __construct($options)
     {
@@ -70,11 +70,15 @@ class Chatkit
 
         $access_token = $this->generateAccessToken($auth_options);
 
-        return array(
-          "access_token" => $access_token,
-          "token_type" => "bearer",
-          "expires_in" => 24 * 60 * 60
-        );
+        return [
+            'status' => 200,
+            'headers' => array(),
+            'body' => [
+                'access_token' => $access_token,
+                'token_type' => 'bearer',
+                'expires_in' => 24 * 60 * 60
+            ]
+        ];
     }
 
     public function generateAccessToken($auth_options)
