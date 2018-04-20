@@ -25,24 +25,30 @@ class Chatkit
 
     /**
      *
-     * Initializes a new Chatkit instance with instalce_locator and key.
-     * You can optionally turn on debugging for all requests by setting debug to true.
+     * Initializes a new Chatkit instance.
      *
-     * @param string $instance_locator
-     * @param string $key
-     * @param array  $options          [optional]
-     *                                 Options to configure the Chatkit instance.
-     *                                 scheme - e.g. http or https
-     *                                 host - the host; no trailing forward slash.
-     *                                 port - the http port
-     *                                 timeout - the http timeout
+     *
+     * @param array $options   Options to configure the Chatkit instance.
+     *                         instance_locator - your Chatkit instance locator
+     *                         key - your Chatkit instance's key
+     *                         scheme - e.g. http or https
+     *                         host - the host; no trailing forward slash.
+     *                         port - the http port
+     *                         timeout - the http timeout
      */
-    public function __construct($instance_locator, $key, $options = array())
+    public function __construct($options)
     {
         $this->checkCompatibility();
 
-        $this->settings['instance_locator'] = $instance_locator;
-        $this->settings['key'] = $key;
+        if (!isset($options['instance_locator'])) {
+            throw new MissingArgumentException('You must provide an instance_locator');
+        }
+        if (!isset($options['key'])) {
+            throw new MissingArgumentException('You must provide a key');
+        }
+
+        $this->settings['instance_locator'] = $options['instance_locator'];
+        $this->settings['key'] = $options['key'];
         $this->api_settings['service_name'] = "chatkit";
         $this->api_settings['service_version'] = "v1";
         $this->authorizer_settings['service_name'] = "chatkit_authorizer";
@@ -56,33 +62,28 @@ class Chatkit
         }
     }
 
-    public function generateTokenPair($auth_options)
+    public function authenticate($auth_options)
     {
-        $access_token = $this->generateAccessToken($auth_options);
-        $refresh_token = $this->generateRefreshToken($auth_options);
+        if (!isset($auth_options['user_id'])) {
+            throw new MissingArgumentException('You must provide a user ID');
+        }
 
-        return array(
-          "access_token" => $access_token,
-          "token_type" => "bearer",
-          "expires_in" => 24 * 60 * 60,
-          "refresh_token" => $refresh_token
-        );
+        $access_token = $this->generateAccessToken($auth_options);
+
+        return [
+            'status' => 200,
+            'headers' => array(),
+            'body' => [
+                'access_token' => $access_token,
+                'token_type' => 'bearer',
+                'expires_in' => 24 * 60 * 60
+            ]
+        ];
     }
 
     public function generateAccessToken($auth_options)
     {
         return $this->generateToken($auth_options);
-    }
-
-    public function generateRefreshToken($auth_options)
-    {
-        $merged_auth_options = array(
-            "refresh" => true
-        );
-        foreach ($auth_options as $key => $value) {
-            $merged_auth_options[$key] = $value;
-        }
-        return $this->generateToken($merged_auth_options);
     }
 
     public function generateToken($auth_options)
@@ -100,23 +101,14 @@ class Chatkit
         if (isset($auth_options['user_id'])) {
             $claims['sub'] = $auth_options['user_id'];
         }
-        if (isset($auth_options['refresh']) && $auth_options['refresh'] === true) {
-            $claims['refresh'] = true;
-        } else {
-            if (isset($auth_options['su']) && $auth_options['su'] === true) {
-                $claims['su'] = true;
-            }
-            $claims['exp'] = strtotime('+1 day', $now);
+
+        if (isset($auth_options['su']) && $auth_options['su'] === true) {
+            $claims['su'] = true;
         }
 
-        $jwt = JWT::encode($claims, $split_key[1]);
+        $claims['exp'] = strtotime('+1 day', $now);
 
-        $token_payload = array(
-            "token" => $jwt,
-            "expires_in" => 24 * 60 * 60
-        );
-
-        return $jwt;
+        return JWT::encode($claims, $split_key[1]);
     }
 
     /**
@@ -162,19 +154,26 @@ class Chatkit
     }
 
 
-    public function createUser($id, $name, $avatar_url = null, $custom_data = null)
+    public function createUser($options)
     {
-        $body = array(
-            "id" => $id,
-            "name" => $name
-        );
-
-        if (!is_null($avatar_url)) {
-            $body['avatar_url'] = $avatar_url;
+        if (!isset($options['id'])) {
+            throw new MissingArgumentException('You must provide an ID');
+        }
+        if (!isset($options['name'])) {
+            throw new MissingArgumentException('You must provide a name');
         }
 
-        if (!is_null($custom_data)) {
-            $body['custom_data'] = $custom_data;
+        $body = array(
+            "id" => $options['id'],
+            "name" => $options['name']
+        );
+
+        if (!is_null($options['avatar_url'])) {
+            $body['avatar_url'] = $options['avatar_url'];
+        }
+
+        if (!is_null($options['custom_data'])) {
+            $body['custom_data'] = $options['custom_data'];
         }
 
         $ch = $this->createCurl(
@@ -189,32 +188,38 @@ class Chatkit
         return $response;
     }
 
-    public function updateUser($id, $name = null, $avatar_url = null, $custom_data = null)
+    public function updateUser($options)
     {
+        if (!isset($options['id'])) {
+            throw new MissingArgumentException('You must provide an ID');
+        }
+
         $body = array();
 
-        if (!is_null($name)) {
-            $body['name'] = $name;
+        if (!is_null($options['name'])) {
+            $body['name'] = $options['name'];
         }
-        if (!is_null($avatar_url)) {
-            $body['avatar_url'] = $avatar_url;
+        if (!is_null($options['avatar_url'])) {
+            $body['avatar_url'] = $options['avatar_url'];
         }
-        if (!is_null($custom_data)) {
-            $body['custom_data'] = $custom_data;
+        if (!is_null($options['custom_data'])) {
+            $body['custom_data'] = $options['custom_data'];
         }
 
         if (empty($body)) {
             throw new MissingArgumentException('At least one of the following are required: name, avatar_url, or custom_data.');
         }
 
-        $token = $this->generateToken(array(
-            'user_id' => $id,
+        $user_id = $options['id'];
+
+        $token = $this->generateToken([
+            'user_id' => $user_id,
             'su' => true
-        ));
+        ]);
 
         $ch = $this->createCurl(
             $this->api_settings,
-            "/users/" . $id,
+            "/users/" . $user_id,
             $token,
             "PUT",
             $body
@@ -229,6 +234,7 @@ class Chatkit
      *
      * @param array $options  The room options
      *                          [Available Options]
+     *                          • creator_id (string|required): Represents the ID of the user that you want to create the room.
      *                          • name (string|optional): Represents the name with which the room is identified.
      *                              A room name must not be longer than 40 characters and can only contain lowercase letters,
      *                              numbers, underscores and hyphens.
@@ -237,9 +243,9 @@ class Chatkit
      *                              you may provide their user IDs.
      * @return array
      */
-    public function createRoom($user_id, array $options = [])
+    public function createRoom($options)
     {
-        if (is_null($user_id)) {
+        if (is_null($options['creator_id'])) {
             throw new MissingArgumentException('You must provide the ID of the user that you wish to create the room');
         }
         $body = [];
@@ -259,7 +265,7 @@ class Chatkit
         $ch = $this->createCurl(
             $this->api_settings,
             '/rooms',
-            $this->getServerToken($user_id),
+            $this->getServerToken([ 'user_id' => $options['creator_id'] ]),
             'POST',
             $body
         );
@@ -270,18 +276,26 @@ class Chatkit
     /**
      * Get all rooms a user belongs to
      *
-     * @param $user_id
-     * @param bool|null $joinableOnly If true, return only rooms the user can join
+     * @param array $options
+     *              [Available Options]
+     *              • user_id (string|required): Represents the ID of the user that you want to get the rooms for.
+     *              • joinable (bool|optional): Indicates if you only want the joinable rooms returned for the given user.
      * @return array
-     * @throws ChatkitException
+     * @throws ChatkitException or MissingArgumentException
      */
-    public function getUserRooms($user_id, $joinableOnly = null)
+    public function getUserRooms($options)
     {
-        $queryParams = $joinableOnly === null ? [] : ['joinable' => $joinableOnly];
+        if (is_null($options['user_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user that you want to get the rooms for');
+        }
+
+        $user_id = $options['user_id'];
+
+        $queryParams = is_null($options['joinable']) ? [] : ['joinable' => $options['joinable']];
         $ch = $this->createCurl(
             $this->api_settings,
             "/users/$user_id/rooms",
-            $this->getServerToken($user_id),
+            $this->getServerToken([ 'user_id' => $user_id ]),
             'GET',
             [],
             $queryParams
@@ -290,18 +304,27 @@ class Chatkit
         return $this->execCurl($ch);
     }
 
-    public function sendMessage($id, $room_id, $text)
+    public function sendMessage($options)
     {
+        if (is_null($options['sender_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user that you want to set as the sender of the message');
+        }
+        if (is_null($options['room_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room that you want to add the message to');
+        }
+        if (is_null($options['text'])) {
+            throw new MissingArgumentException('You must provide some text for the message');
+        }
+        $user_id = $options['sender_id'];
+        $room_id = $options['room_id'];
+        $text = $options['text'];
+
         $body = array(
             'text' => $text
         );
 
-        if (empty($body['text'])) {
-            throw new MissingArgumentException('A message text is required.');
-        }
-
         $token = $this->generateToken(array(
-            'user_id' => $id
+            'user_id' => $user_id
         ));
 
         $ch = $this->createCurl(
@@ -316,9 +339,15 @@ class Chatkit
         return $response;
     }
 
-    public function deleteUser($user_id)
+    public function deleteUser($options)
     {
-        $token = $this->getServerToken($user_id);
+        if (is_null($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user that you wish to delete');
+        }
+
+        $user_id = $options['id'];
+
+        $token = $this->getServerToken([ 'user_id' => $user_id ]);
 
         $ch = $this->createCurl(
             $this->api_settings,
@@ -331,10 +360,10 @@ class Chatkit
         return $response;
     }
 
-    public function getUsersByIds($user_ids)
+    public function getUsersByIds($options)
     {
         $token = $this->getServerToken();
-        $user_ids_string = implode(',', $user_ids);
+        $user_ids_string = implode(',', $options['user_ids']);
 
         $ch = $this->createCurl(
             $this->api_settings,
@@ -406,11 +435,11 @@ class Chatkit
         return $ch;
     }
 
-    protected function getServerToken($user_id = null)
+    protected function getServerToken($options = [])
     {
-        $token_options = array("su" => true);
-        if (!is_null($user_id)) {
-            $token_options['user_id'] = $user_id;
+        $token_options = [ 'su' => true ];
+        if (!is_null($options['user_id'])) {
+            $token_options['user_id'] = $options['user_id'];
         }
         return $this->generateAccessToken($token_options);
     }
