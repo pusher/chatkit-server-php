@@ -42,11 +42,33 @@ $chatkit = new Chatkit\Chatkit([
 
 To authenticate a user (a Chatkit client) use the `authenticate` function.
 
+You need to provide an associative array that has a `user_id` key with a string value. For example:
+
 ```php
-$chatkit->authenticate([
-  'user_id' => 'ham'
-]);
+$chatkit->authenticate([ 'user_id' => 'ham' ]);
 ```
+
+It returns an associative array that is structured like this:
+
+```php
+[
+    'status': 200,
+    'headers': [
+        'Some-Header': 'some-value'
+    ],
+    'body': [
+        'access_token' => 'an.access.token',
+        'token_type' => 'bearer',
+        'expires_in' => 86400
+    ]
+]
+```
+
+where:
+
+* `status` is the suggested HTTP response status code,
+* `headers` are the suggested response headers,
+* `body` holds the token payload.
 
 ## Creating a user
 
