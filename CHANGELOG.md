@@ -22,11 +22,11 @@ It returns an associative array that is structured like this:
 
 ```php
 [
-    'status': 200,
-    'headers': [
-        'Some-Header': 'some-value'
+    'status' => 200,
+    'headers' => [
+        'Some-Header' => 'some-value'
     ],
-    'body': [
+    'body' => [
         'access_token' => 'an.access.token',
         'token_type' => 'bearer',
         'expires_in' => 86400
