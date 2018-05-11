@@ -168,11 +168,11 @@ class Chatkit
             "name" => $options['name']
         );
 
-        if (!is_null($options['avatar_url'])) {
+        if (isset($options['avatar_url']) && !is_null($options['avatar_url'])) {
             $body['avatar_url'] = $options['avatar_url'];
         }
 
-        if (!is_null($options['custom_data'])) {
+        if (isset($options['custom_data']) && !is_null($options['custom_data'])) {
             $body['custom_data'] = $options['custom_data'];
         }
 
@@ -184,8 +184,7 @@ class Chatkit
             $body
         );
 
-        $response = $this->execCurl($ch);
-        return $response;
+        return $this->execCurl($ch);
     }
 
     public function updateUser($options)
@@ -225,8 +224,7 @@ class Chatkit
             $body
         );
 
-        $response = $this->execCurl($ch);
-        return $response;
+        return $this->execCurl($ch);
     }
 
     /**
@@ -335,8 +333,7 @@ class Chatkit
             $body
         );
 
-        $response = $this->execCurl($ch);
-        return $response;
+        return $this->execCurl($ch);
     }
 
     public function deleteUser($options)
@@ -356,8 +353,7 @@ class Chatkit
             'DELETE'
         );
 
-        $response = $this->execCurl($ch);
-        return $response;
+        return $this->execCurl($ch);
     }
 
     public function getUsersByIds($options)
@@ -372,8 +368,7 @@ class Chatkit
             'GET'
         );
 
-        $response = $this->execCurl($ch);
-        return $response;
+        return $this->execCurl($ch);
     }
 
     /**
@@ -438,7 +433,7 @@ class Chatkit
     protected function getServerToken($options = [])
     {
         $token_options = [ 'su' => true ];
-        if (!is_null($options['user_id'])) {
+        if (isset($options['user_id']) && !is_null($options['user_id'])) {
             $token_options['user_id'] = $options['user_id'];
         }
         return $this->generateAccessToken($token_options);
@@ -449,18 +444,22 @@ class Chatkit
      */
     protected function execCurl($ch)
     {
-        $response = json_decode(curl_exec($ch), true);
+        $response = array();
+
+        $response['body'] = json_decode(curl_exec($ch), true);
+
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $response['status'] = $status;
 
         // inform the user of a connection failure
-        if ($status == 0 || $response === false) {
+        if ($status == 0 || $response['body'] === false) {
             throw new ConnectionException(curl_error($ch));
         }
 
         // or an error response from Chatkit
         if ($status >= 400) {
             $this->log('ERROR: execCurl error: '.print_r($response, true));
-            throw (new ChatkitException($response['error_description'], $status))->setBody($response);
+            throw (new ChatkitException($response['body']['error_description'], $status))->setBody($response['body']);
         }
 
         $this->log('INFO: execCurl response: '.print_r($response, true));
