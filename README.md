@@ -14,7 +14,7 @@ Or add to `composer.json`:
 
 ```json
 "require": {
-    "pusher/pusher-chatkit-server": "^0.4.0"
+    "pusher/pusher-chatkit-server": "^0.5.0"
 }
 ```
 
