@@ -296,7 +296,7 @@ class Chatkit
 
         $user_id = $options['user_id'];
 
-        $queryParams = is_null($options['joinable']) ? [] : ['joinable' => $options['joinable']];
+        $queryParams = isset($options['joinable']) ? ['joinable' => $options['joinable']] : [];
         $ch = $this->createCurl(
             $this->api_settings,
             "/users/$user_id/rooms",
