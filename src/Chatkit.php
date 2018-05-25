@@ -6,6 +6,7 @@ use Chatkit\Exceptions\ChatkitException;
 use Chatkit\Exceptions\ConfigurationException;
 use Chatkit\Exceptions\ConnectionException;
 use Chatkit\Exceptions\MissingArgumentException;
+use Chatkit\Exceptions\TypeMismatchException;
 use \Firebase\JWT\JWT;
 
 class Chatkit
@@ -99,6 +100,9 @@ class Chatkit
         );
 
         if (isset($auth_options['user_id'])) {
+            if (gettype($auth_options['user_id']) != 'string') {
+                throw new TypeMismatchException('User ID must be a string');
+            }
             $claims['sub'] = $auth_options['user_id'];
         }
 
@@ -158,6 +162,9 @@ class Chatkit
     {
         if (!isset($options['id'])) {
             throw new MissingArgumentException('You must provide an ID');
+        }
+        if (gettype($options['id']) != 'string') {
+            throw new TypeMismatchException('User ID must be a string');
         }
         if (!isset($options['name'])) {
             throw new MissingArgumentException('You must provide a name');
