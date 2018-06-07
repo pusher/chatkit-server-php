@@ -202,13 +202,13 @@ class Chatkit
 
         $body = array();
 
-        if (!is_null($options['name'])) {
+        if (isset($options['name']) && !is_null($options['name'])) {
             $body['name'] = $options['name'];
         }
-        if (!is_null($options['avatar_url'])) {
+        if (isset($options['avatar_url']) && !is_null($options['avatar_url'])) {
             $body['avatar_url'] = $options['avatar_url'];
         }
-        if (!is_null($options['custom_data'])) {
+        if (isset($options['custom_data']) && !is_null($options['custom_data'])) {
             $body['custom_data'] = $options['custom_data'];
         }
 
