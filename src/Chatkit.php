@@ -328,6 +328,20 @@ class Chatkit
             'text' => $text
         );
 
+        if (isset($options['attachment'])) {
+            if (is_null($options['attachment']['resource_link'])) {
+                throw new MissingArgumentException('You must provide the resource_link for the attachment');
+            }
+            if (is_null($options['attachment']['type']) || !in_array($options['attachment']['type'], array('image', 'video', 'audio', 'file'))) {
+                throw new MissingArgumentException('You must provide the type for the attachment. This can be one of image, video, audio or file');
+            }
+
+            $body['attachment'] = array(
+                'resource_link' => $options['attachment']['resource_link'],
+                'type' => $options['attachment']['type']
+            );
+        }
+
         $token = $this->generateToken(array(
             'user_id' => $user_id
         ));
