@@ -202,13 +202,13 @@ class Chatkit
 
         $body = array();
 
-        if (!is_null($options['name'])) {
+        if (isset($options['name']) && !is_null($options['name'])) {
             $body['name'] = $options['name'];
         }
-        if (!is_null($options['avatar_url'])) {
+        if (isset($options['avatar_url']) && !is_null($options['avatar_url'])) {
             $body['avatar_url'] = $options['avatar_url'];
         }
-        if (!is_null($options['custom_data'])) {
+        if (isset($options['custom_data']) && !is_null($options['custom_data'])) {
             $body['custom_data'] = $options['custom_data'];
         }
 
@@ -327,6 +327,20 @@ class Chatkit
         $body = array(
             'text' => $text
         );
+
+        if (isset($options['attachment'])) {
+            if (is_null($options['attachment']['resource_link'])) {
+                throw new MissingArgumentException('You must provide the resource_link for the attachment');
+            }
+            if (is_null($options['attachment']['type']) || !in_array($options['attachment']['type'], array('image', 'video', 'audio', 'file'))) {
+                throw new MissingArgumentException('You must provide the type for the attachment. This can be one of image, video, audio or file');
+            }
+
+            $body['attachment'] = array(
+                'resource_link' => $options['attachment']['resource_link'],
+                'type' => $options['attachment']['type']
+            );
+        }
 
         $token = $this->generateToken(array(
             'user_id' => $user_id
