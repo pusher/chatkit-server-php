@@ -377,6 +377,30 @@ class Chatkit
         return $this->execCurl($ch);
     }
 
+    /**
+     * $options['from_ts'] should be in the B8601DZw.d format
+     *
+     * e.g. 2018-04-17T14:02:00Z
+     */
+    public function getUsers($options = [])
+    {
+        $token = $this->getServerToken();
+
+        $query = '';
+        if (!empty($options['from_ts'])) {
+            $query = '?from_ts=' . $options['from_ts'];
+        }
+
+        $ch = $this->createCurl(
+            $this->api_settings,
+            '/users' . $query,
+            $token,
+            'GET'
+        );
+
+        return $this->execCurl($ch);
+    }
+
     public function getUsersByIds($options)
     {
         $token = $this->getServerToken();
