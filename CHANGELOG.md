@@ -6,14 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/0.5.3...HEAD)
 
-## [0.5.3](https://github.com/pusher/chatkit-server-php/compare/0.5.0...0.5.3) - 2018-06-11
+## [0.5.3](https://github.com/pusher/chatkit-server-php/compare/0.5.2...0.5.3) - 2018-06-11
 
 ### Additions
 
 - `deleteRoom` functionality added [#19](https://github.com/pusher/chatkit-server-php/pull/19) by [@morrislaptop](https://github.com/morrislaptop)
 - `getUsers` functionality added [#20](https://github.com/pusher/chatkit-server-php/pull/20) by [@morrislaptop](https://github.com/morrislaptop)
 
-## [0.5.2](https://github.com/pusher/chatkit-server-php/compare/0.5.0...0.5.2) - 2018-06-07
+## [0.5.2](https://github.com/pusher/chatkit-server-php/compare/0.5.1...0.5.2) - 2018-06-07
 
 ### Fixes
 
