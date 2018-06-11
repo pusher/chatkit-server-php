@@ -279,20 +279,16 @@ class Chatkit
     }
 
     /**
-     * Deletes a room give an room_id and user_id
+     * Deletes a room given a room_id
      */
     public function deleteRoom($options)
     {
         if (is_null($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room that you wish to delete');
         }
-        if (is_null($options['user_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the user that owns the room');
-        }
 
         $room_id = $options['room_id'];
-
-        $token = $this->getServerToken(['user_id' => $options['user_id']]);
+        $token = $this->getServerToken();
 
         $ch = $this->createCurl(
             $this->api_settings,
@@ -411,15 +407,15 @@ class Chatkit
     public function getUsers($options = [])
     {
         $token = $this->getServerToken();
+        $path = '/users';
 
-        $query = '';
         if (!empty($options['from_ts'])) {
-            $query = '?from_ts=' . $options['from_ts'];
+            $path = $path . '?from_ts=' . $options['from_ts'];
         }
 
         $ch = $this->createCurl(
             $this->api_settings,
-            '/users' . $query,
+            $path,
             $token,
             'GET'
         );

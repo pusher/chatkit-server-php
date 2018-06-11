@@ -1,0 +1,13 @@
+<?php
+
+require_once(dirname(__FILE__) . '/../vendor/autoload.php');
+
+$chatkit = new Chatkit\Chatkit([
+  'instance_locator' => 'your:instance:locator',
+  'key' => 'your:key'
+]);
+
+print_r($chatkit->getUsers());
+
+// example with a from_ts parameter
+// print_r($chatkit->getUsers([ 'from_ts' => '2018-04-17T12:46:51Z' ]));
