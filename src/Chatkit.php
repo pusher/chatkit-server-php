@@ -279,6 +279,32 @@ class Chatkit
     }
 
     /**
+     * Deletes a room give an room_id and user_id
+     */
+    public function deleteRoom($options)
+    {
+        if (is_null($options['room_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room that you wish to delete');
+        }
+        if (is_null($options['user_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user that owns the room');
+        }
+
+        $room_id = $options['room_id'];
+
+        $token = $this->getServerToken(['user_id' => $options['user_id']]);
+
+        $ch = $this->createCurl(
+            $this->api_settings,
+            '/rooms/' . $room_id,
+            $token,
+            'DELETE'
+        );
+
+        return $this->execCurl($ch);
+    }
+
+    /**
      * Get all rooms a user belongs to
      *
      * @param array $options
