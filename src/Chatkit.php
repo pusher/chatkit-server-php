@@ -330,13 +330,13 @@ class Chatkit
 
         return $this->execCurl($ch);
     }
-    
+
     /**
      * Get messages in a room
      *
      * @param array $options
      *              [Available Options]
-     *              • room_id (string|required): Represents the ID of the user that you want to get the rooms for.
+     *              • room_id (string|required): Represents the ID of the room that you want to get the messages for.
      * @return array
      * @throws ChatkitException or MissingArgumentException
      */
@@ -351,7 +351,7 @@ class Chatkit
         $ch = $this->createCurl(
             $this->api_settings,
             "/rooms/$room_id/messages",
-            $this->getServerToken(['user_id' => 'noop']),
+            $this->getServerToken(),
             'GET'
         );
 
