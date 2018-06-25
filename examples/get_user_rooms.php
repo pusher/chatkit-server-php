@@ -8,4 +8,3 @@ $chatkit = new Chatkit\Chatkit([
 ]);
 
 print_r($chatkit->getUserRooms([ 'user_id' => 'ham' ]));
-
