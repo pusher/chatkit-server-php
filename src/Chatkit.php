@@ -54,6 +54,8 @@ class Chatkit
         $this->api_settings['service_version'] = "v1";
         $this->authorizer_settings['service_name'] = "chatkit_authorizer";
         $this->authorizer_settings['service_version'] = "v1";
+        $this->cursor_settings['service_name'] = "chatkit_cursors";
+        $this->cursor_settings['service_version'] = "v1";
 
         foreach ($options as $key => $value) {
             // only set if valid setting/option
