@@ -577,7 +577,7 @@ class Chatkit
         }
 
         // Set cURL opts and execute request
-        curl_setopt($ch, CURLOPT_URL, $full_url);
+        curl_setopt($ch, CURLOPT_URL, $final_url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/json',
             "Authorization: Bearer ".$jwt
