@@ -299,6 +299,71 @@ class Chatkit
 
         return $this->execCurl($ch);
     }
+    
+    /**
+     * Get all read cursors for a user
+     *
+     * @param array $options
+     *              [Available Options]
+     *              • user_id (string|required): Represents the ID of the user that you want to get the rooms for.
+     * @return array
+     * @throws ChatkitException or MissingArgumentException
+     */
+    public function getUserReadCursors($options)
+    {
+        if (is_null($options['user_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user that you want to get the cursors for');
+        }
+
+        $user_id = $options['user_id'];
+
+        $ch = $this->createCurl(
+            $this->cursor_settings,
+            "/cursors/0/users/$user_id",
+            $this->getServerToken([ 'user_id' => $user_id ]),
+            'GET'
+        );
+
+        return $this->execCurl($ch);
+    }
+
+    /**
+     * Sets the read cursor for a user in a room.
+     *
+     * @param array $options
+     *              [Available Options]
+     *              • user_id (string|required): Represents the ID of the user that you want to get the rooms for.
+     *              • room_id (string|required): Represents the ID of the user that you want to get the rooms for.
+     *              • position (string|required): Represents the ID of the user that you want to get the rooms for.
+     * @return array
+     * @throws ChatkitException or MissingArgumentException
+     */
+    public function setCursor($options)
+    {
+        if (is_null($options['user_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user that you want to get the cursor for');
+        }
+        if (is_null($options['room_id'])) {
+            throw new MissingArgumentException('You must provide the room ID of the room that you want to set the cursor for');
+        }
+        if (is_null($options['position'])) {
+            throw new MissingArgumentException('You must provide the position of the cursor');
+        }
+
+        $user_id = $options['user_id'];
+        $room_id = $options['room_id'];
+        $body = ['position' => $options['position']];
+
+        $ch = $this->createCurl(
+            $this->cursor_settings,
+            "/cursors/0/rooms/$room_id/users/$user_id",
+            $this->getServerToken([ 'user_id' => $user_id ]),
+            'PUT',
+            $body
+        );
+
+        return $this->execCurl($ch);
+    }
 
     /**
      * Get all rooms a user belongs to
@@ -337,6 +402,9 @@ class Chatkit
      * @param array $options
      *              [Available Options]
      *              • room_id (string|required): Represents the ID of the room that you want to get the messages for.
+     *              • initial_id (integer|optional): Starting ID of the range of messages.
+     *              • limit (integer|optional): Number of messages to return
+     *              • direction (string|optional): Order of messages - one of newer or older
      * @return array
      * @throws ChatkitException or MissingArgumentException
      */
@@ -345,6 +413,11 @@ class Chatkit
         if (is_null($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room that you want to get the messages for');
         }
+        
+        $queryParams = [];
+        if (!empty($options['initial_id'])) $queryParams['initial_id'] = $options['initial_id'];
+        if (!empty($options['limit'])) $queryParams['limit'] = $options['limit'];
+        if (!empty($options['direction'])) $queryParams['direction'] = $options['direction'];
 
         $room_id = $options['room_id'];
 
@@ -352,7 +425,9 @@ class Chatkit
             $this->api_settings,
             "/rooms/$room_id/messages",
             $this->getServerToken(),
-            'GET'
+            'GET',
+            null,
+            $queryParams
         );
 
         return $this->execCurl($ch);
