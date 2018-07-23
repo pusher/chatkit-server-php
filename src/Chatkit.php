@@ -334,9 +334,9 @@ class Chatkit
      *
      * @param array $options
      *              [Available Options]
-     *              • user_id (string|required): Represents the ID of the user that you want to get the rooms for.
-     *              • room_id (string|required): Represents the ID of the user that you want to get the rooms for.
-     *              • position (string|required): Represents the ID of the user that you want to get the rooms for.
+     *              • user_id (string|required): Represents the ID of the user that you want to set the cursor for.
+     *              • room_id (string|required): Represents the ID of the room that you want to set the cursor for.
+     *              • position (integer|required): Represents the ID of the message the user has read.
      * @return array
      * @throws ChatkitException or MissingArgumentException
      */
