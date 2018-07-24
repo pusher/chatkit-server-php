@@ -51,7 +51,7 @@ class Chatkit
         $this->settings['instance_locator'] = $options['instance_locator'];
         $this->settings['key'] = $options['key'];
         $this->api_settings['service_name'] = "chatkit";
-        $this->api_settings['service_version'] = "v1";
+        $this->api_settings['service_version'] = "v2";
         $this->authorizer_settings['service_name'] = "chatkit_authorizer";
         $this->authorizer_settings['service_version'] = "v1";
 
