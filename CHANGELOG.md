@@ -16,46 +16,46 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.5.4](https://github.com/pusher/chatkit-server-php/compare/0.5.3...0.5.4) - 2018-06-25
 
-### Additions
+### Added
 
 - `getRoomMessages` functionality added [#21](https://github.com/pusher/chatkit-server-php/pull/21) by [@morrislaptop](https://github.com/morrislaptop)
 
 ## [0.5.3](https://github.com/pusher/chatkit-server-php/compare/0.5.2...0.5.3) - 2018-06-11
 
-### Additions
+### Added
 
 - `deleteRoom` functionality added [#19](https://github.com/pusher/chatkit-server-php/pull/19) by [@morrislaptop](https://github.com/morrislaptop)
 - `getUsers` functionality added [#20](https://github.com/pusher/chatkit-server-php/pull/20) by [@morrislaptop](https://github.com/morrislaptop)
 
 ## [0.5.2](https://github.com/pusher/chatkit-server-php/compare/0.5.1...0.5.2) - 2018-06-07
 
-### Fixes
+### Fixed
 
 - `updateUser` validates information properly [#18](https://github.com/pusher/chatkit-server-php/pull/18) by [@morrislaptop](https://github.com/morrislaptop)
 
-### Additions
+### Added
 
 - `sendMessage` supports send messages with attachments [#18](https://github.com/pusher/chatkit-server-php/pull/18) by [@morrislaptop](https://github.com/morrislaptop)
 
 ## [0.5.1](https://github.com/pusher/chatkit-server-php/compare/0.5.0...0.5.1) - 2018-05-25
 
-### Changes
+### Changed
 
 - User ID is validated to be a string as part of `createUser`, `authenticate`, and `generateAccessToken` calls
 
-### Fixes
+### Fixed
 
 - `getUserRooms` no longer crashes if `joinable` option not set
 
 ## [0.5.0](https://github.com/pusher/chatkit-server-php/compare/0.4.0...0.5.0) - 2018-05-11
 
-### Changes
+### Changed
 
 - API calls to Chatkit servers now return an associative array that has the keys `'status'` and `'body'`.
 
 ## [0.4.0](https://github.com/pusher/chatkit-server-php/compare/0.3.0...0.4.0) - 2018-04-20
 
-### Additions
+### Added
 
 - `authenticate` has been added. This should be the function you use to authenticate your users for Chatkit.
 
@@ -87,11 +87,11 @@ where:
 * `headers` are the suggested response headers,
 * `body` holds the token payload.
 
-### Removals
+### Removed
 
 - `getTokenPair` has been removed
 
-### Changes
+### Changed
 
 - Authentication no longer returns refresh tokens.
 
