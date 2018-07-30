@@ -391,7 +391,7 @@ class Chatkit
             "/users/$user_id/rooms",
             $this->getServerToken([ 'user_id' => $user_id ]),
             'GET',
-            [],
+            null,
             $queryParams
         );
 
@@ -518,16 +518,19 @@ class Chatkit
     {
         $token = $this->getServerToken();
         $path = '/users';
+        $queryParams = [];
 
         if (!empty($options['from_ts'])) {
-            $path = $path . '?from_ts=' . $options['from_ts'];
+            $queryParams['from_ts'] = $options['from_ts'];
         }
 
         $ch = $this->createCurl(
             $this->api_settings,
             $path,
             $token,
-            'GET'
+            'GET',
+            null,
+            $queryParams
         );
 
         return $this->execCurl($ch);
@@ -536,13 +539,15 @@ class Chatkit
     public function getUsersByIds($options)
     {
         $token = $this->getServerToken();
-        $user_ids_string = implode(',', $options['user_ids']);
+        $userIDsString = implode(',', $options['user_ids']);
 
         $ch = $this->createCurl(
             $this->api_settings,
-            '/users_by_ids' . '?user_ids=' . $user_ids_string,
+            '/users_by_ids',
             $token,
-            'GET'
+            'GET',
+            null,
+            [ 'user_ids' => $userIDsString ]
         );
 
         return $this->execCurl($ch);
