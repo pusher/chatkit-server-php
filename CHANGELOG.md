@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/0.5.4...HEAD)
+## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/0.5.5...HEAD)
+
+## [0.5.5](https://github.com/pusher/chatkit-server-php/compare/0.5.4...0.5.5) - 2018-07-30
+
+### Added
+
+- `setReadCursor` functionality added. [#22](https://github.com/pusher/chatkit-server-php/pull/22) by [@morrislaptop](https://github.com/morrislaptop)
+- `getUserReadCursors` functionality added. [#22](https://github.com/pusher/chatkit-server-php/pull/22) by [@morrislaptop](https://github.com/morrislaptop)
+- `getRoomMessages` now supports providing an `initial_id`, a `limit`, and a `direction`. [#22](https://github.com/pusher/chatkit-server-php/pull/22) by [@morrislaptop](https://github.com/morrislaptop)
 
 ## [0.5.4](https://github.com/pusher/chatkit-server-php/compare/0.5.3...0.5.4) - 2018-06-25
 
