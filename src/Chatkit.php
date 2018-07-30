@@ -301,7 +301,7 @@ class Chatkit
 
         return $this->execCurl($ch);
     }
-    
+
     /**
      * Get all read cursors for a user
      *
@@ -340,7 +340,7 @@ class Chatkit
      * @return array
      * @throws ChatkitException or MissingArgumentException
      */
-    public function setCursor($options)
+    public function setReadCursor($options)
     {
         if (is_null($options['user_id'])) {
             throw new MissingArgumentException('You must provide the ID of the user that you want to get the cursor for');
@@ -415,11 +415,17 @@ class Chatkit
         if (is_null($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room that you want to get the messages for');
         }
-        
+
         $queryParams = [];
-        if (!empty($options['initial_id'])) $queryParams['initial_id'] = $options['initial_id'];
-        if (!empty($options['limit'])) $queryParams['limit'] = $options['limit'];
-        if (!empty($options['direction'])) $queryParams['direction'] = $options['direction'];
+        if (!empty($options['initial_id'])) {
+            $queryParams['initial_id'] = $options['initial_id'];
+        }
+        if (!empty($options['limit'])) {
+            $queryParams['limit'] = $options['limit'];
+        }
+        if (!empty($options['direction'])) {
+            $queryParams['direction'] = $options['direction'];
+        }
 
         $room_id = $options['room_id'];
 
