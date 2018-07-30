@@ -7,4 +7,4 @@ $chatkit = new Chatkit\Chatkit([
   'key' => 'your:key'
 ]);
 
-print_r($chatkit->getRoomMessages([ 'room_id' =>  123456]));
+print_r($chatkit->getRoomMessages([ 'room_id' =>  123456 ]));
