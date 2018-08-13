@@ -303,6 +303,51 @@ class Chatkit
     }
 
     /**
+     * Join a given user to a given room
+     *
+     * @param array $options
+     *                          [Available Options]
+     *                          • user_id (string|required): Represents the ID of the user that you want to join to the room.
+     *                          • room_id (integer|required): Represents the room_id with which the room is identified.
+     *
+     * @throws ChatkitException if any required dependencies are missing
+     *
+     * @return array
+     */
+    public function joinRoom($options)
+    {
+        if (!isset($options['user_id'])) {
+            throw new MissingArgumentException('You must provide a User ID');
+        }
+
+        if (gettype($options['user_id']) != 'string') {
+            throw new TypeMismatchException('User ID must be a string');
+        }
+
+        if (!isset($options['room_id'])) {
+            throw new MissingArgumentException('You must provide a Room ID');
+        }
+
+        $userId = $options['user_id'];
+
+        $roomId = $options['room_id'];
+
+        $token = $this->generateToken([
+            'su' => true
+        ]);
+
+        $ch = $this->createCurl(
+            $this->api_settings,
+            '/users/' . $userId . '/rooms/' . $roomId . '/join',
+            $token,
+            'POST',
+            null
+        );
+
+        return $this->execCurl($ch);
+    }
+
+    /**
      * Get all read cursors for a user
      *
      * @param array $options
