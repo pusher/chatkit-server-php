@@ -348,6 +348,91 @@ class Chatkit
     }
 
     /**
+     * Add given users to a given room
+     *
+     * @param array $options
+     *                          [Available Options]
+     *                          • user_ids (array|required): Represents the IDs of the users that you want to add to the room.
+     *                          • room_id (integer|required): Represents the room_id with which the room is identified.
+     *
+     * @throws ChatkitException if any required dependencies are missing
+     *
+     * @return array
+     */
+    public function addUsersToRoom($options)
+    {
+        if (!isset($options['room_id'])) {
+            throw new MissingArgumentException('You must provide a Room ID');
+        }
+
+        if (!isset($options['user_ids'])) {
+            throw new MissingArgumentException('You must provide a User ID(s) to add them to a room');
+        }
+
+        $roomId = $options['room_id'];
+
+        $body = [];
+        $body['user_ids'] = $options['user_ids'];
+
+        $token = $this->generateToken([
+            'su' => true
+        ]);
+
+        $ch = $this->createCurl(
+            $this->api_settings,
+            '/rooms/' . $roomId . '/users/add',
+            $token,
+            'PUT',
+            $body
+        );
+
+        return $this->execCurl($ch);
+    }
+
+
+    /**
+     * Remove given users from a given room
+     *
+     * @param array $options
+     *                          [Available Options]
+     *                          • user_ids (array|required): Represents the IDs of the users that you want remove from the room.
+     *                          • room_id (integer|required): Represents the room_id with which the room is identified.
+     *
+     * @throws ChatkitException if any required dependencies are missing
+     *
+     * @return array
+     */
+    public function removeUsersFromRoom($options)
+    {
+        if (!isset($options['room_id'])) {
+            throw new MissingArgumentException('You must provide a Room ID');
+        }
+
+        if (!isset($options['user_ids'])) {
+            throw new MissingArgumentException('You must provide a User ID(s) to remove them from a room');
+        }
+
+        $roomId = $options['room_id'];
+
+        $body = [];
+        $body['user_ids'] = $options['user_ids'];
+
+        $token = $this->generateToken([
+            'su' => true
+        ]);
+
+        $ch = $this->createCurl(
+            $this->api_settings,
+            '/rooms/' . $roomId . '/users/remove',
+            $token,
+            'PUT',
+            $body
+        );
+
+        return $this->execCurl($ch);
+    }
+
+    /**
      * Get all read cursors for a user
      *
      * @param array $options
