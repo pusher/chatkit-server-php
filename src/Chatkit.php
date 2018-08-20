@@ -332,9 +332,7 @@ class Chatkit
 
         $roomId = $options['room_id'];
 
-        $token = $this->generateToken([
-            'su' => true
-        ]);
+        $token = $this->getServerToken();
 
         $ch = $this->createCurl(
             $this->api_settings,
@@ -374,9 +372,7 @@ class Chatkit
         $body = [];
         $body['user_ids'] = $options['user_ids'];
 
-        $token = $this->generateToken([
-            'su' => true
-        ]);
+        $token = $this->getServerToken();
 
         $ch = $this->createCurl(
             $this->api_settings,
@@ -417,9 +413,7 @@ class Chatkit
         $body = [];
         $body['user_ids'] = $options['user_ids'];
 
-        $token = $this->generateToken([
-            'su' => true
-        ]);
+        $token = $this->getServerToken();
 
         $ch = $this->createCurl(
             $this->api_settings,
