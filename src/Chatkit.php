@@ -51,7 +51,7 @@ class Chatkit
         $this->settings['instance_locator'] = $options['instance_locator'];
         $this->settings['key'] = $options['key'];
         $this->api_settings['service_name'] = "chatkit";
-        $this->api_settings['service_version'] = "v1";
+        $this->api_settings['service_version'] = "v2";
         $this->authorizer_settings['service_name'] = "chatkit_authorizer";
         $this->authorizer_settings['service_version'] = "v1";
         $this->cursor_settings['service_name'] = "chatkit_cursors";
@@ -671,7 +671,7 @@ class Chatkit
             $token,
             'GET',
             null,
-            [ 'user_ids' => $userIDsString ]
+            [ 'id' => $options['user_ids'] ]
         );
 
         return $this->execCurl($ch);
@@ -690,7 +690,10 @@ class Chatkit
         $instance_id = $split_instance_locator[2];
 
         $full_url = $scheme."://".$host."/services/".$service_path_fragment."/".$instance_id.$path;
-        $query_string = http_build_query($query_params);
+        $query = http_build_query($query_params);
+        // Passing foo = [1, 2, 3] to query params will encode it as foo[0]=1&foo[1]=2
+        // however, we want foo=1&foo=2 (to treat them as an array)
+        $query_string = preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $query);
         $final_url = $full_url."?".$query_string;
 
         $this->log('INFO: createCurl( '.$final_url.' )');
