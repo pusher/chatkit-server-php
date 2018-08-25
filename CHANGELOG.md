@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/0.5.8...HEAD)
 
+## [0.5.9](https://github.com/pusher/chatkit-server-php/compare/0.5.7...0.5.8) - 2018-08-25
+### Added
+
+- `getAllRooms` functionality added. [#31](https://github.com/pusher/chatkit-server-php/pull/31) by [@philipnjuguna66](https://github.com/mludi)
+
+
+
 ## [0.5.8](https://github.com/pusher/chatkit-server-php/compare/0.5.7...0.5.8) - 2018-08-21
 
 ### Added
