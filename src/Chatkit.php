@@ -283,13 +283,15 @@ class Chatkit
 
     /**
      * @param $options
+     * include include_private= true to return private rooms also
      * @return array
      * @throws ConfigurationException
      * @throws ConnectionException
      */
     public function getAllRooms($options)
     {
-        $queryParams = isset($options['include_private']) ?  $options['include_private']  : [ 'include_private' => true];
+        $queryParams = isset($options['include_private']) ? ['include_private' => $options['include_private']] : [];
+
         $ch = $this->createCurl(
             $this->api_settings,
             "/rooms/",
