@@ -4,14 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/0.5.8...HEAD)
+## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/0.5.9...HEAD)
 
-## [0.5.9](https://github.com/pusher/chatkit-server-php/compare/0.5.7...0.5.8) - 2018-08-25
+## [0.5.9](https://github.com/pusher/chatkit-server-php/compare/0.5.8...0.5.9) - 2018-08-29
+
 ### Added
 
-- `getAllRooms` functionality added. [#31](https://github.com/pusher/chatkit-server-php/pull/31) by [@philipnjuguna66](https://github.com/mludi)
-
-
+- `getRooms` functionality added. [#31](https://github.com/pusher/chatkit-server-php/pull/31) by [@philipnjuguna66](https://github.com/philipnjuguna66)
 
 ## [0.5.8](https://github.com/pusher/chatkit-server-php/compare/0.5.7...0.5.8) - 2018-08-21
 
