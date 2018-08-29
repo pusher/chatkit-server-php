@@ -288,13 +288,13 @@ class Chatkit
      * @throws ConfigurationException
      * @throws ConnectionException
      */
-    public function getAllRooms($options)
+    public function getRooms($options)
     {
         $queryParams = isset($options['include_private']) ? ['include_private' => $options['include_private']] : [];
 
         $ch = $this->createCurl(
             $this->api_settings,
-            "/rooms/",
+            "/rooms",
             $this->getServerToken(),
             'GET',
             null,
