@@ -280,6 +280,30 @@ class Chatkit
         return $this->execCurl($ch);
     }
 
+
+    /**
+     * @param $options
+     * include include_private= true to return private rooms also
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     */
+    public function getAllRooms($options)
+    {
+        $queryParams = isset($options['include_private']) ? ['include_private' => $options['include_private']] : [];
+
+        $ch = $this->createCurl(
+            $this->api_settings,
+            "/rooms/",
+            $this->getServerToken(),
+            'GET',
+            null,
+            $queryParams
+        );
+
+        return $this->execCurl($ch);
+    }
+
     /**
      * Deletes a room given a room_id
      */
