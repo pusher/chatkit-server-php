@@ -9,5 +9,5 @@ $chatkit = new Chatkit\Chatkit([
 
 print_r($chatkit->joinRoom([
   'user_id' => 'ham',
-  'room_id' => 123
+  'room_id' => '123'
 ]));

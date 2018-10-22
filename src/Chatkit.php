@@ -332,7 +332,7 @@ class Chatkit
      * @param array $options
      *                          [Available Options]
      *                          • user_id (string|required): Represents the ID of the user that you want to join to the room.
-     *                          • room_id (integer|required): Represents the room_id with which the room is identified.
+     *                          • room_id (string|required): Represents the room_id with which the room is identified.
      *
      * @throws ChatkitException if any required dependencies are missing
      *
@@ -375,7 +375,7 @@ class Chatkit
      * @param array $options
      *                          [Available Options]
      *                          • user_ids (array|required): Represents the IDs of the users that you want to add to the room.
-     *                          • room_id (integer|required): Represents the room_id with which the room is identified.
+     *                          • room_id (string|required): Represents the room_id with which the room is identified.
      *
      * @throws ChatkitException if any required dependencies are missing
      *
@@ -416,7 +416,7 @@ class Chatkit
      * @param array $options
      *                          [Available Options]
      *                          • user_ids (array|required): Represents the IDs of the users that you want remove from the room.
-     *                          • room_id (integer|required): Represents the room_id with which the room is identified.
+     *                          • room_id (string|required): Represents the room_id with which the room is identified.
      *
      * @throws ChatkitException if any required dependencies are missing
      *
@@ -552,7 +552,7 @@ class Chatkit
      * @param array $options
      *              [Available Options]
      *              • room_id (string|required): Represents the ID of the room that you want to get the messages for.
-     *              • initial_id (integer|optional): Starting ID of the range of messages.
+     *              • initial_id (string|optional): Starting ID of the range of messages.
      *              • limit (integer|optional): Number of messages to return
      *              • direction (string|optional): Order of messages - one of newer or older
      * @return array
