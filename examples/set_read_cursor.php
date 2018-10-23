@@ -9,6 +9,6 @@ $chatkit = new Chatkit\Chatkit([
 
 print_r($chatkit->setReadCursor([
   'user_id' =>  'ham',
-  'room_id' =>  456789,
+  'room_id' =>  '456789',
   'position' =>  123,
 ]));

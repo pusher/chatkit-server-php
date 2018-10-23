@@ -9,6 +9,6 @@ $chatkit = new Chatkit\Chatkit([
 
 print_r($chatkit->sendMessage([
   'sender_id' => 'ham',
-  'room_id' => 123456,
+  'room_id' => '123456',
   'text' => 'Vivan is the best'
 ]));
