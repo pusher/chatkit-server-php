@@ -637,6 +637,13 @@ class Chatkit
         return $this->execCurl($ch);
     }
 
+    /**
+     * Deletes a message with the specified id.
+     *
+     * @param string $message_id
+     *
+     * @return array
+     */
     public function deleteMessage($message_id)
     {
         if (is_null($message_id)) {
