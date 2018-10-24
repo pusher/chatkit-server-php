@@ -1,5 +1,5 @@
 composer.lock
 phpunit.xml
-test/config.php
+tests/config.php
 vendor
 .idea/

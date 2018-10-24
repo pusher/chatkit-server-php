@@ -7,7 +7,7 @@ use Chatkit\Exceptions\ConfigurationException;
 use Chatkit\Exceptions\ConnectionException;
 use Chatkit\Exceptions\MissingArgumentException;
 use Chatkit\Exceptions\TypeMismatchException;
-use \Firebase\JWT\JWT;
+use Firebase\JWT\JWT;
 
 class Chatkit
 {
@@ -23,6 +23,7 @@ class Chatkit
 
     protected $api_settings = array();
     protected $authorizer_settings = array();
+    protected $cursor_settings = array();
 
     /**
      *
@@ -50,12 +51,12 @@ class Chatkit
 
         $this->settings['instance_locator'] = $options['instance_locator'];
         $this->settings['key'] = $options['key'];
-        $this->api_settings['service_name'] = "chatkit";
-        $this->api_settings['service_version'] = "v2";
-        $this->authorizer_settings['service_name'] = "chatkit_authorizer";
-        $this->authorizer_settings['service_version'] = "v1";
-        $this->cursor_settings['service_name'] = "chatkit_cursors";
-        $this->cursor_settings['service_version'] = "v1";
+        $this->api_settings['service_name'] = 'chatkit';
+        $this->api_settings['service_version'] = 'v2';
+        $this->authorizer_settings['service_name'] = 'chatkit_authorizer';
+        $this->authorizer_settings['service_version'] = 'v2';
+        $this->cursor_settings['service_name'] = 'chatkit_cursors';
+        $this->cursor_settings['service_version'] = 'v2';
 
         foreach ($options as $key => $value) {
             // only set if valid setting/option
@@ -71,7 +72,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide a user ID');
         }
 
-        $access_token = $this->generateAccessToken($auth_options);
+        $access_token = $this->generateAccessToken($auth_options)['token'];
 
         return [
             'status' => 200,
@@ -86,19 +87,28 @@ class Chatkit
 
     public function generateAccessToken($auth_options)
     {
+        if (empty($auth_options)) {
+            throw new MissingArgumentException('You must provide a either a user_id or `su: true`');
+        }
         return $this->generateToken($auth_options);
     }
 
-    public function generateToken($auth_options)
+    public function generateSuToken($auth_options = [])
     {
-        $split_instance_locator = explode(":", $this->settings['instance_locator']);
-        $split_key = explode(":", $this->settings['key']);
+        $auth_options = array_merge($auth_options, [ 'su' => true ]);
+        return $this->generateToken($auth_options);
+    }
+
+    public function generateToken($auth_options = [])
+    {
+        $split_instance_locator = explode(':', $this->settings['instance_locator']);
+        $split_key = explode(':', $this->settings['key']);
 
         $now = time();
         $claims = array(
-            "instance" => $split_instance_locator[2],
-            "iss" => "api_keys/".$split_key[0],
-            "iat" => $now
+            'instance' => $split_instance_locator[2],
+            'iss' => 'api_keys/'.$split_key[0],
+            'iat' => $now
         );
 
         if (isset($auth_options['user_id'])) {
@@ -114,7 +124,11 @@ class Chatkit
 
         $claims['exp'] = strtotime('+1 day', $now);
 
-        return JWT::encode($claims, $split_key[1]);
+        $jwt = JWT::encode($claims, $split_key[1]);
+        return [
+            'token' => $jwt,
+            'expires_in' => 24 * 60 * 60
+        ];
     }
 
     /**
@@ -151,14 +165,15 @@ class Chatkit
     protected function checkCompatibility()
     {
         if (!extension_loaded('curl')) {
-            throw new ConfigurationException('The Chatkit library requires the PHP cURL module. Please ensure it is installed');
+            throw new ConfigurationException('The Chatkit SDK requires the PHP cURL module. Please ensure it is installed');
         }
 
         if (!extension_loaded('json')) {
-            throw new ConfigurationException('The Chatkit library requires the PHP JSON module. Please ensure it is installed');
+            throw new ConfigurationException('The Chatkit SDK requires the PHP JSON module. Please ensure it is installed');
         }
     }
 
+    // User API
 
     public function createUser($options)
     {
@@ -173,8 +188,8 @@ class Chatkit
         }
 
         $body = array(
-            "id" => $options['id'],
-            "name" => $options['name']
+            'id' => $options['id'],
+            'name' => $options['name']
         );
 
         if (isset($options['avatar_url']) && !is_null($options['avatar_url'])) {
@@ -185,21 +200,36 @@ class Chatkit
             $body['custom_data'] = $options['custom_data'];
         }
 
-        $ch = $this->createCurl(
-            $this->api_settings,
-            "/users",
-            $this->getServerToken(),
-            "POST",
-            $body
-        );
+        $options = [
+            'method' => 'POST',
+            'path' => '/users',
+            'jwt' => $this->getServerToken()['token'],
+            'body' => $body
+        ];
 
-        return $this->execCurl($ch);
+        return $this->apiRequest($options);
+    }
+
+    public function createUsers($options)
+    {
+        if (!isset($options['users'])) {
+            throw new MissingArgumentException('You must provide a list of users you want to create');
+        }
+
+        $options = [
+            'method' => 'POST',
+            'path' => '/batch_users',
+            'jwt' => $this->getServerToken()['token'],
+            'body' => $options
+        ];
+
+        return $this->apiRequest($options);
     }
 
     public function updateUser($options)
     {
         if (!isset($options['id'])) {
-            throw new MissingArgumentException('You must provide an ID');
+            throw new MissingArgumentException('You must provide the ID of the user you want to update');
         }
 
         $body = array();
@@ -219,22 +249,86 @@ class Chatkit
         }
 
         $user_id = $options['id'];
+        $token = $this->getServerToken([ 'user_id' => $user_id ])['token'];
 
-        $token = $this->generateToken([
-            'user_id' => $user_id,
-            'su' => true
+        return $this->apiRequest([
+            'method' => 'PUT',
+            'path' => "/users/$user_id",
+            'jwt' => $token,
+            'body' => $body
         ]);
-
-        $ch = $this->createCurl(
-            $this->api_settings,
-            "/users/" . $user_id,
-            $token,
-            "PUT",
-            $body
-        );
-
-        return $this->execCurl($ch);
     }
+
+    public function deleteUser($options)
+    {
+        if (is_null($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user you want to delete');
+        }
+
+        $user_id = $options['id'];
+
+        return $this->apiRequest([
+            'method' => 'DELETE',
+            'path' => "/users/$user_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    public function getUser($options)
+    {
+        if (is_null($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user you want to fetch');
+        }
+
+        $user_id = $options['id'];
+
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => "/users/$user_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    /**
+     * $options['from_ts'] should be in the B8601DZw.d format
+     *
+     * e.g. 2018-04-17T14:02:00Z
+     */
+    public function getUsers($options = [])
+    {
+        $query_params = [];
+
+        if (!empty($options['from_ts'])) {
+            $query_params['from_ts'] = $options['from_ts'];
+        }
+
+        if (!empty($options['limit'])) {
+            $query_params['limit'] = $options['limit'];
+        }
+
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => '/users',
+            'jwt' => $this->getServerToken()['token'],
+            'query' => query_params
+        ]);
+    }
+
+    public function getUsersByID($options)
+    {
+        if (is_null($options['user_ids'])) {
+            throw new MissingArgumentException('You must provide the IDs of the users you want to fetch');
+        }
+
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => '/users_by_ids',
+            'jwt' => $this->getServerToken()['token'],
+            'query' => [ 'id' => $options['user_ids'] ]
+        ]);
+    }
+
+    // Room API
 
     /**
      * Creates a new room.
@@ -253,228 +347,267 @@ class Chatkit
     public function createRoom($options)
     {
         if (is_null($options['creator_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the user that you wish to create the room');
+            throw new MissingArgumentException('You must provide the ID of the user creating the room');
         }
-        $body = [];
-
-        if (isset($options['name'])) {
-            $body['name'] = (string) $options['name'];
+        if (is_null($options['name'])) {
+            throw new MissingArgumentException('You must provide a name for the room');
         }
 
+        $body = [
+            'name' => $options['name']
+        ];
         if (isset($options['private'])) {
             $body['private'] = (bool) $options['private'];
         }
-
         if (isset($options['user_ids'])) {
             $body['user_ids'] = (array) $options['user_ids'];
         }
 
-        $ch = $this->createCurl(
-            $this->api_settings,
-            '/rooms',
-            $this->getServerToken([ 'user_id' => $options['creator_id'] ]),
-            'POST',
-            $body
-        );
+        $token = $this->getServerToken([ 'user_id' => $options['creator_id'] ])['token'];
 
-        return $this->execCurl($ch);
+        return $this->apiRequest([
+            'method' => 'POST',
+            'path' => '/rooms',
+            'jwt' => $token,
+            'body' => $body
+        ]);
     }
 
-
-    /**
-     * @param $options
-     * include include_private= true to return private rooms also
-     * @return array
-     * @throws ConfigurationException
-     * @throws ConnectionException
-     */
-    public function getRooms($options)
+    public function updateRoom($options)
     {
-        $queryParams = isset($options['include_private']) ? ['include_private' => $options['include_private']] : [];
+        if (is_null($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room to update');
+        }
 
-        $ch = $this->createCurl(
-            $this->api_settings,
-            "/rooms",
-            $this->getServerToken(),
-            'GET',
-            null,
-            $queryParams
-        );
+        $body = [];
+        if (isset($options['private'])) {
+            $body['private'] = (bool) $options['private'];
+        }
+        if (isset($options['name'])) {
+            $body['name'] = (array) $options['name'];
+        }
 
-        return $this->execCurl($ch);
+        $room_id = $options['id'];
+
+        return $this->apiRequest([
+            'method' => 'PUT',
+            'path' => "/rooms/$room_id",
+            'jwt' => $this->getServerToken()['token'],
+            'body' => $body
+        ]);
     }
 
     /**
-     * Deletes a room given a room_id
+     * Deletes a room
      */
     public function deleteRoom($options)
     {
+        if (is_null($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room to delete');
+        }
+
+        $room_id = $options['id'];
+
+        return $this->apiRequest([
+            'method' => 'DELETE',
+            'path' => "/rooms/$room_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    public function getRoom($options)
+    {
+        if (is_null($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room to fetch');
+        }
+
+        $room_id = $options['id'];
+
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => "/rooms/$room_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    /**
+     * Get all rooms a user belongs to
+     */
+    public function getUserRooms($options)
+    {
+        return $this->getRoomsForUser($options);
+    }
+
+    /**
+     * Get all rooms that are joinable for a given user
+     */
+    public function getUserJoinableRooms($options)
+    {
+        $options = array_merge($options, [ 'joinable' => true ]);
+        return $this->getRoomsForUser($options);
+    }
+
+    public function addUsersToRoom($options)
+    {
         if (is_null($options['room_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the room that you wish to delete');
+            throw new MissingArgumentException('You must provide the ID of the room you want to add users to');
+        }
+        if (is_null($options['user_ids'])) {
+            throw new MissingArgumentException('You must provide a list of IDs of the users you want to add to the room');
         }
 
         $room_id = $options['room_id'];
-        $token = $this->getServerToken();
 
-        $ch = $this->createCurl(
-            $this->api_settings,
-            '/rooms/' . $room_id,
-            $token,
-            'DELETE'
-        );
-
-        return $this->execCurl($ch);
+        return $this->apiRequest([
+            'method' => 'PUT',
+            'path' => "/rooms/$room_id/users/add",
+            'jwt' => $this->getServerToken()['token'],
+            'body' => [ 'user_ids' => $options['user_ids'] ]
+        ]);
     }
 
-    /**
-     * Join a given user to a given room
-     *
-     * @param array $options
-     *                          [Available Options]
-     *                          • user_id (string|required): Represents the ID of the user that you want to join to the room.
-     *                          • room_id (integer|required): Represents the room_id with which the room is identified.
-     *
-     * @throws ChatkitException if any required dependencies are missing
-     *
-     * @return array
-     */
-    public function joinRoom($options)
-    {
-        if (!isset($options['user_id'])) {
-            throw new MissingArgumentException('You must provide a User ID');
-        }
-
-        if (gettype($options['user_id']) != 'string') {
-            throw new TypeMismatchException('User ID must be a string');
-        }
-
-        if (!isset($options['room_id'])) {
-            throw new MissingArgumentException('You must provide a Room ID');
-        }
-
-        $userId = $options['user_id'];
-
-        $roomId = $options['room_id'];
-
-        $token = $this->getServerToken();
-
-        $ch = $this->createCurl(
-            $this->api_settings,
-            '/users/' . $userId . '/rooms/' . $roomId . '/join',
-            $token,
-            'POST',
-            null
-        );
-
-        return $this->execCurl($ch);
-    }
-
-    /**
-     * Add given users to a given room
-     *
-     * @param array $options
-     *                          [Available Options]
-     *                          • user_ids (array|required): Represents the IDs of the users that you want to add to the room.
-     *                          • room_id (integer|required): Represents the room_id with which the room is identified.
-     *
-     * @throws ChatkitException if any required dependencies are missing
-     *
-     * @return array
-     */
-    public function addUsersToRoom($options)
-    {
-        if (!isset($options['room_id'])) {
-            throw new MissingArgumentException('You must provide a Room ID');
-        }
-
-        if (!isset($options['user_ids'])) {
-            throw new MissingArgumentException('You must provide a User ID(s) to add them to a room');
-        }
-
-        $roomId = $options['room_id'];
-
-        $body = [];
-        $body['user_ids'] = $options['user_ids'];
-
-        $token = $this->getServerToken();
-
-        $ch = $this->createCurl(
-            $this->api_settings,
-            '/rooms/' . $roomId . '/users/add',
-            $token,
-            'PUT',
-            $body
-        );
-
-        return $this->execCurl($ch);
-    }
-
-
-    /**
-     * Remove given users from a given room
-     *
-     * @param array $options
-     *                          [Available Options]
-     *                          • user_ids (array|required): Represents the IDs of the users that you want remove from the room.
-     *                          • room_id (integer|required): Represents the room_id with which the room is identified.
-     *
-     * @throws ChatkitException if any required dependencies are missing
-     *
-     * @return array
-     */
     public function removeUsersFromRoom($options)
     {
-        if (!isset($options['room_id'])) {
-            throw new MissingArgumentException('You must provide a Room ID');
+        if (is_null($options['room_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room you want to remove users from');
+        }
+        if (is_null($options['user_ids'])) {
+            throw new MissingArgumentException('You must provide a list of IDs of the users you want to remove from the room');
         }
 
-        if (!isset($options['user_ids'])) {
-            throw new MissingArgumentException('You must provide a User ID(s) to remove them from a room');
-        }
+        $room_id = $options['room_id'];
 
-        $roomId = $options['room_id'];
-
-        $body = [];
-        $body['user_ids'] = $options['user_ids'];
-
-        $token = $this->getServerToken();
-
-        $ch = $this->createCurl(
-            $this->api_settings,
-            '/rooms/' . $roomId . '/users/remove',
-            $token,
-            'PUT',
-            $body
-        );
-
-        return $this->execCurl($ch);
+        return $this->apiRequest([
+            'method' => 'PUT',
+            'path' => "/rooms/$room_id/users/remove",
+            'jwt' => $this->getServerToken()['token'],
+            'body' => [ 'user_ids' => $options['user_ids'] ]
+        ]);
     }
 
+    # Messages API
+
     /**
-     * Get all read cursors for a user
+     * Get messages in a room
      *
      * @param array $options
      *              [Available Options]
-     *              • user_id (string|required): Represents the ID of the user that you want to get the rooms for.
+     *              • room_id (string|required): Represents the ID of the room that you want to get the messages for.
+     *              • initial_id (integer|optional): Starting ID of the range of messages.
+     *              • limit (integer|optional): Number of messages to return
+     *              • direction (string|optional): Order of messages - one of newer or older
      * @return array
      * @throws ChatkitException or MissingArgumentException
      */
-    public function getUserReadCursors($options)
+    public function getRoomMessages($options)
+    {
+        if (is_null($options['room_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room to fetch messages from');
+        }
+
+        $query_params = [];
+        if (!empty($options['initial_id'])) {
+            $query_params['initial_id'] = $options['initial_id'];
+        }
+        if (!empty($options['limit'])) {
+            $query_params['limit'] = $options['limit'];
+        }
+        if (!empty($options['direction'])) {
+            $query_params['direction'] = $options['direction'];
+        }
+
+        $room_id = $options['room_id'];
+
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => "/rooms/$room_id/messages",
+            'jwt' => $this->getServerToken()['token'],
+            'query' => $query_params
+        ]);
+    }
+
+    public function sendMessage($options)
+    {
+        if (is_null($options['sender_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user sending the message');
+        }
+        if (is_null($options['room_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room to send the message to');
+        }
+        if (is_null($options['text'])) {
+            throw new MissingArgumentException('You must provide some text for the message');
+        }
+
+        $body = array(
+            'text' => $options['text']
+        );
+
+        if (isset($options['attachment'])) {
+            if (is_null($options['attachment']['resource_link'])) {
+                throw new MissingArgumentException('You must provide a resource_link for the message attachment');
+            }
+
+            $valid_file_types = ['image', 'video', 'audio', 'file'];
+            if (is_null($options['attachment']['type']) || !in_array($options['attachment']['type'], $valid_file_types)) {
+                $valid_file_types_str = implode(',', $valid_file_types);
+                throw new MissingArgumentException("You must provide the type for the attachment. This can be one of $valid_file_types_str");
+            }
+
+            $body['attachment'] = array(
+                'resource_link' => $options['attachment']['resource_link'],
+                'type' => $options['attachment']['type']
+            );
+        }
+
+        $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
+        $room_id = $options['room_id'];
+
+        return $this->apiRequest([
+            'method' => 'POST',
+            'path' => "/rooms/$room_id/messages",
+            'jwt' => $token,
+            'body' => $body
+        ]);
+    }
+
+    public function deleteMessage($options)
+    {
+        if (is_null($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the message to delete');
+        }
+
+        $message_id = $options['id'];
+
+        return $this->apiRequest([
+            'method' => 'DELETE',
+            'path' => "/messages/$message_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    // Roles and permissions API
+
+    // TODO
+
+    // Cursors API
+
+    public function getReadCursor($options)
     {
         if (is_null($options['user_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the user that you want to get the cursors for');
+            throw new MissingArgumentException('You must provide the ID of the user whose read cursor you want to fetch');
+        }
+        if (is_null($options['room_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room that you want the read cursor for');
         }
 
         $user_id = $options['user_id'];
+        $room_id = $options['room_id'];
 
-        $ch = $this->createCurl(
-            $this->cursor_settings,
-            "/cursors/0/users/$user_id",
-            $this->getServerToken([ 'user_id' => $user_id ]),
-            'GET'
-        );
-
-        return $this->execCurl($ch);
+        return $this->cursorsRequest([
+            'method' => 'GET',
+            'path' => "/cursors/0/rooms/$room_id/users/$user_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
     }
 
     /**
@@ -502,203 +635,115 @@ class Chatkit
 
         $user_id = $options['user_id'];
         $room_id = $options['room_id'];
-        $body = ['position' => $options['position']];
 
-        $ch = $this->createCurl(
-            $this->cursor_settings,
-            "/cursors/0/rooms/$room_id/users/$user_id",
-            $this->getServerToken([ 'user_id' => $user_id ]),
-            'PUT',
-            $body
-        );
-
-        return $this->execCurl($ch);
+        return $this->cursorsRequest([
+            'method' => 'PUT',
+            'path' => "/cursors/0/rooms/$room_id/users/$user_id",
+            'jwt' => $this->getServerToken()['token'],
+            'body' => ['position' => $options['position']]
+        ]);
     }
 
     /**
-     * Get all rooms a user belongs to
+     * Get all read cursors for a user
      *
      * @param array $options
      *              [Available Options]
-     *              • user_id (string|required): Represents the ID of the user that you want to get the rooms for.
-     *              • joinable (bool|optional): Indicates if you only want the joinable rooms returned for the given user.
+     *              • user_id (string|required): Represents the ID of the user that you want to get the read cursors for.
      * @return array
      * @throws ChatkitException or MissingArgumentException
      */
-    public function getUserRooms($options)
+    public function getUserReadCursors($options)
     {
         if (is_null($options['user_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the user that you want to get the rooms for');
+            throw new MissingArgumentException('You must provide the ID of the user that you want the read cursors for');
         }
 
         $user_id = $options['user_id'];
 
-        $queryParams = isset($options['joinable']) ? ['joinable' => $options['joinable']] : [];
-        $ch = $this->createCurl(
-            $this->api_settings,
-            "/users/$user_id/rooms",
-            $this->getServerToken([ 'user_id' => $user_id ]),
-            'GET',
-            null,
-            $queryParams
-        );
-
-        return $this->execCurl($ch);
+        return $this->cursorsRequest([
+            'method' => 'GET',
+            'path' => "/cursors/0/users/$user_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
     }
 
     /**
-     * Get messages in a room
+     * Get all read cursors for a room
      *
      * @param array $options
      *              [Available Options]
-     *              • room_id (string|required): Represents the ID of the room that you want to get the messages for.
-     *              • initial_id (integer|optional): Starting ID of the range of messages.
-     *              • limit (integer|optional): Number of messages to return
-     *              • direction (string|optional): Order of messages - one of newer or older
+     *              • room_id (string|required): Represents the ID of the room that you want to get the read cursors for.
      * @return array
      * @throws ChatkitException or MissingArgumentException
      */
-    public function getRoomMessages($options)
+    public function getRoomReadCursors($options)
     {
         if (is_null($options['room_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the room that you want to get the messages for');
-        }
-
-        $queryParams = [];
-        if (!empty($options['initial_id'])) {
-            $queryParams['initial_id'] = $options['initial_id'];
-        }
-        if (!empty($options['limit'])) {
-            $queryParams['limit'] = $options['limit'];
-        }
-        if (!empty($options['direction'])) {
-            $queryParams['direction'] = $options['direction'];
+            throw new MissingArgumentException('You must provide the ID of the room that you want the read cursors for');
         }
 
         $room_id = $options['room_id'];
 
+        return $this->cursorsRequest([
+            'method' => 'GET',
+            'path' => "/cursors/0/rooms/$room_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    // Service-specific helpers
+
+    public function apiRequest($options)
+    {
+        return $this->makeRequest($this->api_settings, $options);
+    }
+
+    public function authorizerRequest($options)
+    {
+        return $this->makeRequest($this->authorizer_settings, $options);
+    }
+
+    public function cursorsRequest($options)
+    {
+        return $this->makeRequest($this->cursor_settings, $options);
+    }
+
+    protected function makeRequest($instance_settings, $options)
+    {
+        $options = array_merge($options, [ 'Content-Type' => 'application/json' ]);
+
         $ch = $this->createCurl(
-            $this->api_settings,
-            "/rooms/$room_id/messages",
-            $this->getServerToken(),
-            'GET',
-            null,
-            $queryParams
+            $instance_settings,
+            $options['path'],
+            $options['jwt'],
+            $options['method'],
+            isset($options['body']) ? $options['body'] : null,
+            isset($options['query']) ? $options['query'] : []
         );
 
         return $this->execCurl($ch);
     }
 
-    public function sendMessage($options)
-    {
-        if (is_null($options['sender_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the user that you want to set as the sender of the message');
-        }
-        if (is_null($options['room_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the room that you want to add the message to');
-        }
-        if (is_null($options['text'])) {
-            throw new MissingArgumentException('You must provide some text for the message');
-        }
-        $user_id = $options['sender_id'];
-        $room_id = $options['room_id'];
-        $text = $options['text'];
-
-        $body = array(
-            'text' => $text
-        );
-
-        if (isset($options['attachment'])) {
-            if (is_null($options['attachment']['resource_link'])) {
-                throw new MissingArgumentException('You must provide the resource_link for the attachment');
-            }
-            if (is_null($options['attachment']['type']) || !in_array($options['attachment']['type'], array('image', 'video', 'audio', 'file'))) {
-                throw new MissingArgumentException('You must provide the type for the attachment. This can be one of image, video, audio or file');
-            }
-
-            $body['attachment'] = array(
-                'resource_link' => $options['attachment']['resource_link'],
-                'type' => $options['attachment']['type']
-            );
-        }
-
-        $token = $this->generateToken(array(
-            'user_id' => $user_id
-        ));
-
-        $ch = $this->createCurl(
-            $this->api_settings,
-            '/rooms/' . $room_id . '/messages',
-            $token,
-            'POST',
-            $body
-        );
-
-        return $this->execCurl($ch);
-    }
-
-    public function deleteUser($options)
+    protected function getRoomsForUser($options)
     {
         if (is_null($options['id'])) {
-            throw new MissingArgumentException('You must provide the ID of the user that you wish to delete');
+            throw new MissingArgumentException('You must provide the ID of the user that you want to get the rooms for');
+        }
+
+        $query_params = [];
+        if (!is_null($options['joinable'])) {
+            $query_params['joinable'] = $options['joinable'];
         }
 
         $user_id = $options['id'];
 
-        $token = $this->getServerToken([ 'user_id' => $user_id ]);
-
-        $ch = $this->createCurl(
-            $this->api_settings,
-            '/users/' . $user_id,
-            $token,
-            'DELETE'
-        );
-
-        return $this->execCurl($ch);
-    }
-
-    /**
-     * $options['from_ts'] should be in the B8601DZw.d format
-     *
-     * e.g. 2018-04-17T14:02:00Z
-     */
-    public function getUsers($options = [])
-    {
-        $token = $this->getServerToken();
-        $path = '/users';
-        $queryParams = [];
-
-        if (!empty($options['from_ts'])) {
-            $queryParams['from_ts'] = $options['from_ts'];
-        }
-
-        $ch = $this->createCurl(
-            $this->api_settings,
-            $path,
-            $token,
-            'GET',
-            null,
-            $queryParams
-        );
-
-        return $this->execCurl($ch);
-    }
-
-    public function getUsersByIds($options)
-    {
-        $token = $this->getServerToken();
-        $userIDsString = implode(',', $options['user_ids']);
-
-        $ch = $this->createCurl(
-            $this->api_settings,
-            '/users_by_ids',
-            $token,
-            'GET',
-            null,
-            [ 'id' => $options['user_ids'] ]
-        );
-
-        return $this->execCurl($ch);
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => "/users/$user_id/rooms",
+            'jwt' => $this->getServerToken()['token'],
+            'query' => $query_params
+        ]);
     }
 
     /**
@@ -706,19 +751,19 @@ class Chatkit
      */
     protected function createCurl($service_settings, $path, $jwt, $request_method, $body = null, $query_params = array())
     {
-        $split_instance_locator = explode(":", $this->settings['instance_locator']);
+        $split_instance_locator = explode(':', $this->settings['instance_locator']);
 
-        $scheme = "https";
-        $host = $split_instance_locator[1].".pusherplatform.io";
-        $service_path_fragment = $service_settings['service_name']."/".$service_settings['service_version'];
+        $scheme = 'https';
+        $host = $split_instance_locator[1].'.pusherplatform.io';
+        $service_path_fragment = $service_settings['service_name'].'/'.$service_settings['service_version'];
         $instance_id = $split_instance_locator[2];
 
-        $full_url = $scheme."://".$host."/services/".$service_path_fragment."/".$instance_id.$path;
+        $full_url = $scheme.'://'.$host.'/services/'.$service_path_fragment.'/'.$instance_id.$path;
         $query = http_build_query($query_params);
         // Passing foo = [1, 2, 3] to query params will encode it as foo[0]=1&foo[1]=2
         // however, we want foo=1&foo=2 (to treat them as an array)
         $query_string = preg_replace('/%5B(?:[0-9]|[1-9][0-9]+)%5D=/', '=', $query);
-        $final_url = $full_url."?".$query_string;
+        $final_url = $full_url.'?'.$query_string;
 
         $this->log('INFO: createCurl( '.$final_url.' )');
 
@@ -742,7 +787,7 @@ class Chatkit
         curl_setopt($ch, CURLOPT_URL, $final_url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/json',
-            "Authorization: Bearer ".$jwt
+            'Authorization: Bearer '.$jwt
         ));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->settings['timeout']);
@@ -777,12 +822,38 @@ class Chatkit
      */
     protected function execCurl($ch)
     {
-        $response = array();
+        $headers = [];
+        $response = [];
 
-        $response['body'] = json_decode(curl_exec($ch), true);
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION,
+          function($curl, $header) use (&$headers)
+          {
+              $len = strlen($header);
+              $header = explode(':', $header, 2);
+              if (count($header) < 2) {
+                  return $len;
+              }
 
+              $name = strtolower(trim($header[0]));
+              if (!array_key_exists($name, $headers)) {
+                  $headers[$name] = [trim($header[1])];
+              } else {
+                  $headers[$name][] = trim($header[1]);
+              }
+
+            return $len;
+          }
+        );
+
+        $data = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $response['status'] = $status;
+        $body = empty($data) ? null : json_decode($data, true);
+
+        $response = [
+            'status' => $status,
+            'headers' => $headers,
+            'body' => $body
+        ];
 
         // inform the user of a connection failure
         if ($status == 0 || $response['body'] === false) {
