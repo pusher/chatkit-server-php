@@ -637,23 +637,23 @@ class Chatkit
         return $this->execCurl($ch);
     }
 
-		public function deleteMessage($message_id)
-		{
-				if (is_null($message_id)) {
-						throw new MissingArgumentException('You must provide the ID of the message that you wish to delete');
-				}
+    public function deleteMessage($message_id)
+    {
+        if (is_null($message_id)) {
+            throw new MissingArgumentException('You must provide the ID of the message that you wish to delete');
+        }
 
-				$token = $this->getServerToken();
+        $token = $this->getServerToken();
 
-				$ch = $this->createCurl(
-						$this->api_settings,
-						'/messages/' . $message_id,
-						$token,
-						'DELETE'
-				);
+        $ch = $this->createCurl(
+            $this->api_settings,
+            '/messages/' . $message_id,
+            $token,
+            'DELETE'
+        );
 
-				return $this->execCurl($ch);
-		}
+        return $this->execCurl($ch);
+    }
 
     public function deleteUser($options)
     {
