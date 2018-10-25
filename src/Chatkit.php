@@ -261,7 +261,7 @@ class Chatkit
 
     public function deleteUser($options)
     {
-        if (is_null($options['id'])) {
+        if (!isset($options['id'])) {
             throw new MissingArgumentException('You must provide the ID of the user you want to delete');
         }
 
@@ -276,7 +276,7 @@ class Chatkit
 
     public function getUser($options)
     {
-        if (is_null($options['id'])) {
+        if (!isset($options['id'])) {
             throw new MissingArgumentException('You must provide the ID of the user you want to fetch');
         }
 
@@ -298,8 +298,8 @@ class Chatkit
     {
         $query_params = [];
 
-        if (!empty($options['from_ts'])) {
-            $query_params['from_ts'] = $options['from_ts'];
+        if (!empty($options['from_timestamp'])) {
+            $query_params['from_ts'] = $options['from_timestamp'];
         }
 
         if (!empty($options['limit'])) {
@@ -310,13 +310,13 @@ class Chatkit
             'method' => 'GET',
             'path' => '/users',
             'jwt' => $this->getServerToken()['token'],
-            'query' => query_params
+            'query' => $query_params
         ]);
     }
 
     public function getUsersByID($options)
     {
-        if (is_null($options['user_ids'])) {
+        if (!isset($options['user_ids'])) {
             throw new MissingArgumentException('You must provide the IDs of the users you want to fetch');
         }
 
@@ -346,10 +346,10 @@ class Chatkit
      */
     public function createRoom($options)
     {
-        if (is_null($options['creator_id'])) {
+        if (!isset($options['creator_id'])) {
             throw new MissingArgumentException('You must provide the ID of the user creating the room');
         }
-        if (is_null($options['name'])) {
+        if (!isset($options['name'])) {
             throw new MissingArgumentException('You must provide a name for the room');
         }
 
@@ -375,7 +375,7 @@ class Chatkit
 
     public function updateRoom($options)
     {
-        if (is_null($options['id'])) {
+        if (!isset($options['id'])) {
             throw new MissingArgumentException('You must provide the ID of the room to update');
         }
 
@@ -402,7 +402,7 @@ class Chatkit
      */
     public function deleteRoom($options)
     {
-        if (is_null($options['id'])) {
+        if (!isset($options['id'])) {
             throw new MissingArgumentException('You must provide the ID of the room to delete');
         }
 
@@ -417,7 +417,7 @@ class Chatkit
 
     public function getRoom($options)
     {
-        if (is_null($options['id'])) {
+        if (!isset($options['id'])) {
             throw new MissingArgumentException('You must provide the ID of the room to fetch');
         }
 
@@ -449,10 +449,10 @@ class Chatkit
 
     public function addUsersToRoom($options)
     {
-        if (is_null($options['room_id'])) {
+        if (!isset($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room you want to add users to');
         }
-        if (is_null($options['user_ids'])) {
+        if (!isset($options['user_ids'])) {
             throw new MissingArgumentException('You must provide a list of IDs of the users you want to add to the room');
         }
 
@@ -468,10 +468,10 @@ class Chatkit
 
     public function removeUsersFromRoom($options)
     {
-        if (is_null($options['room_id'])) {
+        if (!isset($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room you want to remove users from');
         }
-        if (is_null($options['user_ids'])) {
+        if (!isset($options['user_ids'])) {
             throw new MissingArgumentException('You must provide a list of IDs of the users you want to remove from the room');
         }
 
@@ -501,7 +501,7 @@ class Chatkit
      */
     public function getRoomMessages($options)
     {
-        if (is_null($options['room_id'])) {
+        if (!isset($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room to fetch messages from');
         }
 
@@ -528,13 +528,13 @@ class Chatkit
 
     public function sendMessage($options)
     {
-        if (is_null($options['sender_id'])) {
+        if (!isset($options['sender_id'])) {
             throw new MissingArgumentException('You must provide the ID of the user sending the message');
         }
-        if (is_null($options['room_id'])) {
+        if (!isset($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room to send the message to');
         }
-        if (is_null($options['text'])) {
+        if (!isset($options['text'])) {
             throw new MissingArgumentException('You must provide some text for the message');
         }
 
@@ -543,12 +543,12 @@ class Chatkit
         );
 
         if (isset($options['attachment'])) {
-            if (is_null($options['attachment']['resource_link'])) {
+            if (!isset($options['attachment']['resource_link'])) {
                 throw new MissingArgumentException('You must provide a resource_link for the message attachment');
             }
 
             $valid_file_types = ['image', 'video', 'audio', 'file'];
-            if (is_null($options['attachment']['type']) || !in_array($options['attachment']['type'], $valid_file_types)) {
+            if (!isset($options['attachment']['type']) || !in_array($options['attachment']['type'], $valid_file_types)) {
                 $valid_file_types_str = implode(',', $valid_file_types);
                 throw new MissingArgumentException("You must provide the type for the attachment. This can be one of $valid_file_types_str");
             }
@@ -572,7 +572,7 @@ class Chatkit
 
     public function deleteMessage($options)
     {
-        if (is_null($options['id'])) {
+        if (!isset($options['id'])) {
             throw new MissingArgumentException('You must provide the ID of the message to delete');
         }
 
@@ -593,10 +593,10 @@ class Chatkit
 
     public function getReadCursor($options)
     {
-        if (is_null($options['user_id'])) {
+        if (!isset($options['user_id'])) {
             throw new MissingArgumentException('You must provide the ID of the user whose read cursor you want to fetch');
         }
-        if (is_null($options['room_id'])) {
+        if (!isset($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room that you want the read cursor for');
         }
 
@@ -623,13 +623,13 @@ class Chatkit
      */
     public function setReadCursor($options)
     {
-        if (is_null($options['user_id'])) {
+        if (!isset($options['user_id'])) {
             throw new MissingArgumentException('You must provide the ID of the user that you want to get the cursor for');
         }
-        if (is_null($options['room_id'])) {
+        if (!isset($options['room_id'])) {
             throw new MissingArgumentException('You must provide the room ID of the room that you want to set the cursor for');
         }
-        if (is_null($options['position'])) {
+        if (!isset($options['position'])) {
             throw new MissingArgumentException('You must provide the position of the cursor');
         }
 
@@ -655,7 +655,7 @@ class Chatkit
      */
     public function getUserReadCursors($options)
     {
-        if (is_null($options['user_id'])) {
+        if (!isset($options['user_id'])) {
             throw new MissingArgumentException('You must provide the ID of the user that you want the read cursors for');
         }
 
@@ -679,7 +679,7 @@ class Chatkit
      */
     public function getRoomReadCursors($options)
     {
-        if (is_null($options['room_id'])) {
+        if (!isset($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room that you want the read cursors for');
         }
 
@@ -727,12 +727,12 @@ class Chatkit
 
     protected function getRoomsForUser($options)
     {
-        if (is_null($options['id'])) {
+        if (!isset($options['id'])) {
             throw new MissingArgumentException('You must provide the ID of the user that you want to get the rooms for');
         }
 
         $query_params = [];
-        if (!is_null($options['joinable'])) {
+        if (!isset($options['joinable'])) {
             $query_params['joinable'] = $options['joinable'];
         }
 
