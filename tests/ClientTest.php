@@ -112,7 +112,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
     public function testCreateUsersShouldRaiseAnExceptionIfNoUsersAreProvided()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $res = $this->chatkit->createUsers([]);
+        $this->chatkit->createUsers([]);
     }
 
     public function testCreateUsersShouldReturnAResponsePayloadIfAValidSetOfOptionsAreProvided()
