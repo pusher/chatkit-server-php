@@ -24,6 +24,46 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `joinRoom` functionality added. [#27](https://github.com/pusher/chatkit-server-php/pull/27) by [@mludi](https://github.com/mludi)
 
+### Changed
+
+### Breaking Changes
+
+- `getUsersByIds` is now `getUsersById`
+- `getUsers` now takes an array with an optional `from_timestamp` key instead of a `from_ts` key
+
+### Added
+
+- The following new methods:
+  - `generateSuToken`
+  - `createUsers`
+  - `getUser`
+  - `updateRoom`
+  - `deleteRoom`
+  - `getRoom`
+  - `getRooms`
+  - `getUserJoinableRooms`
+  - `addUsersToRoom`
+  - `removeUsersFromRoom`
+  - `createGlobalRole`
+  - `createRoomRole`
+  - `deleteGlobalRole`
+  - `deleteRoomRole`
+  - `assignGlobalRoleToUser`
+  - `assignRoomRoleToUser`
+  - `getRoles`
+  - `getUserRoles`
+  - `removeGlobalRoleForUser`
+  - `removeRoomRoleForUser`
+  - `getPermissionsForGlobalRole`
+  - `getPermissionsForRoomRole`
+  - `updatePermissionsForGlobalRole`
+  - `updatePermissionsForRoomRole`
+  - `getReadCursor`
+  - `getRoomReadCursors`
+  - `apiRequest`
+  - `authorizerRequest`
+  - `cursorsRequest`
+
 ## [0.5.6](https://github.com/pusher/chatkit-server-php/compare/0.5.5...0.5.6) - 2018-07-30
 
 ### Fixed
