@@ -29,3 +29,7 @@ and then run `composer update`.
 Or you can clone or download the SDK files.
 
 This SDK depends on PHP modules for cURL and JSON. See [cURL module installation instructions](http://php.net/manual/en/curl.installation.php) and [JSON module installation instructions](http://php.net/manual/en/json.installation.php).
+
+## Getting started
+
+Head over to [our documentation](https://docs.pusher.com/chatkit/reference/server-php).
