@@ -251,7 +251,7 @@ class Chatkit
             throw new MissingArgumentException('At least one of the following are required: name, avatar_url, or custom_data.');
         }
 
-        $user_id = $options['id'];
+        $user_id = rawurlencode($options['id']);
         $token = $this->getServerToken([ 'user_id' => $user_id ])['token'];
 
         return $this->apiRequest([
@@ -268,7 +268,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide the ID of the user you want to delete');
         }
 
-        $user_id = $options['id'];
+        $user_id = rawurlencode($options['id']);
 
         return $this->apiRequest([
             'method' => 'DELETE',
@@ -283,7 +283,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide the ID of the user you want to fetch');
         }
 
-        $user_id = $options['id'];
+        $user_id = rawurlencode($options['id']);
 
         return $this->apiRequest([
             'method' => 'GET',
@@ -391,7 +391,7 @@ class Chatkit
             $body['name'] = $options['name'];
         }
 
-        $room_id = $options['id'];
+        $room_id = rawurlencode($options['id']);
 
         return $this->apiRequest([
             'method' => 'PUT',
@@ -410,7 +410,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide the ID of the room to delete');
         }
 
-        $room_id = $options['id'];
+        $room_id = rawurlencode($options['id']);
 
         return $this->apiRequest([
             'method' => 'DELETE',
@@ -425,7 +425,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide the ID of the room to fetch');
         }
 
-        $room_id = $options['id'];
+        $room_id = rawurlencode($options['id']);
 
         return $this->apiRequest([
             'method' => 'GET',
@@ -480,7 +480,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide a list of IDs of the users you want to add to the room');
         }
 
-        $room_id = $options['room_id'];
+        $room_id = rawurlencode($options['room_id']);
 
         return $this->apiRequest([
             'method' => 'PUT',
@@ -499,7 +499,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide a list of IDs of the users you want to remove from the room');
         }
 
-        $room_id = $options['room_id'];
+        $room_id = rawurlencode($options['room_id']);
 
         return $this->apiRequest([
             'method' => 'PUT',
@@ -540,7 +540,7 @@ class Chatkit
             $query_params['direction'] = $options['direction'];
         }
 
-        $room_id = $options['room_id'];
+        $room_id = rawurlencode($options['room_id']);
 
         return $this->apiRequest([
             'method' => 'GET',
@@ -584,7 +584,7 @@ class Chatkit
         }
 
         $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
-        $room_id = $options['room_id'];
+        $room_id = rawurlencode($options['room_id']);
 
         return $this->apiRequest([
             'method' => 'POST',
@@ -663,7 +663,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide the ID of the user whose roles you want to fetch');
         }
 
-        $user_id = $options['user_id'];
+        $user_id = rawurlencode($options['user_id']);
 
         return $this->authorizerRequest([
             'method' => 'GET',
@@ -720,8 +720,8 @@ class Chatkit
             throw new MissingArgumentException('You must provide the ID of the room that you want the read cursor for');
         }
 
-        $user_id = $options['user_id'];
-        $room_id = $options['room_id'];
+        $user_id = rawurlencode($options['user_id']);
+        $room_id = rawurlencode($options['room_id']);
 
         return $this->cursorsRequest([
             'method' => 'GET',
@@ -753,8 +753,8 @@ class Chatkit
             throw new MissingArgumentException('You must provide the position of the cursor');
         }
 
-        $user_id = $options['user_id'];
-        $room_id = $options['room_id'];
+        $user_id = rawurlencode($options['user_id']);
+        $room_id = rawurlencode($options['room_id']);
 
         return $this->cursorsRequest([
             'method' => 'PUT',
@@ -779,7 +779,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide the ID of the user that you want the read cursors for');
         }
 
-        $user_id = $options['user_id'];
+        $user_id = rawurlencode($options['user_id']);
 
         return $this->cursorsRequest([
             'method' => 'GET',
@@ -803,7 +803,7 @@ class Chatkit
             throw new MissingArgumentException('You must provide the ID of the room that you want the read cursors for');
         }
 
-        $room_id = $options['room_id'];
+        $room_id = rawurlencode($options['room_id']);
 
         return $this->cursorsRequest([
             'method' => 'GET',
@@ -856,7 +856,7 @@ class Chatkit
             $query_params['joinable'] = $options['joinable'];
         }
 
-        $user_id = $options['id'];
+        $user_id = rawurlencode($options['id']);
 
         return $this->apiRequest([
             'method' => 'GET',
