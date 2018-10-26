@@ -8,6 +8,6 @@ $chatkit = new Chatkit\Chatkit([
 ]);
 
 print_r($chatkit->removeUsersFromRoom([
-  'room_id' => 123,
+  'room_id' => '123',
   'user_ids' => ['ham', 'another']
 ]));
