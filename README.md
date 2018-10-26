@@ -125,7 +125,7 @@ To send a message you must provide a user `id`, a `room_id` and the `text`.
 ```php
 $chatkit->sendMessage([
   'sender_id' => 'sarah',
-  'room_id' => 1001,
+  'room_id' => '1001',
   'text' => 'This is a wonderful message.'
 ]);
 ```
