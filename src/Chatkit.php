@@ -290,7 +290,7 @@ class Chatkit
     }
 
     /**
-     * $options['from_ts'] should be in the B8601DZw.d format
+     * $options['from_timestamp'] should be in the B8601DZw.d format
      *
      * e.g. 2018-04-17T14:02:00Z
      */
@@ -354,13 +354,14 @@ class Chatkit
         }
 
         $body = [
-            'name' => $options['name']
+            'name' => $options['name'],
+            'private' => false
         ];
         if (isset($options['private'])) {
-            $body['private'] = (bool) $options['private'];
+            $body['private'] = $options['private'];
         }
         if (isset($options['user_ids'])) {
-            $body['user_ids'] = (array) $options['user_ids'];
+            $body['user_ids'] = $options['user_ids'];
         }
 
         $token = $this->getServerToken([ 'user_id' => $options['creator_id'] ])['token'];
@@ -381,10 +382,10 @@ class Chatkit
 
         $body = [];
         if (isset($options['private'])) {
-            $body['private'] = (bool) $options['private'];
+            $body['private'] = $options['private'];
         }
         if (isset($options['name'])) {
-            $body['name'] = (array) $options['name'];
+            $body['name'] = $options['name'];
         }
 
         $room_id = $options['id'];
@@ -427,6 +428,26 @@ class Chatkit
             'method' => 'GET',
             'path' => "/rooms/$room_id",
             'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    public function getRooms($options = [])
+    {
+        $query_params = [];
+
+        if (!empty($options['from_id'])) {
+            $query_params['from_id'] = $options['from_id'];
+        }
+
+        if (!empty($options['include_private'])) {
+            $query_params['include_private'] = $options['include_private'];
+        }
+
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => "/rooms",
+            'jwt' => $this->getServerToken()['token'],
+            'query' => $query_params
         ]);
     }
 
@@ -732,7 +753,7 @@ class Chatkit
         }
 
         $query_params = [];
-        if (!isset($options['joinable'])) {
+        if (!empty($options['joinable'])) {
             $query_params['joinable'] = $options['joinable'];
         }
 

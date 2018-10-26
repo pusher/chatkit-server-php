@@ -241,11 +241,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
 
     public function testGetUsersShouldReturnAResponsePayloadIfAFromTimestampValueIsProvided()
     {
-        $start_timestamp = date('c');
         $user_id1 = $this->guidv4(openssl_random_pseudo_bytes(16));
         $user_id2 = $this->guidv4(openssl_random_pseudo_bytes(16));
-
-        sleep(1);
 
         $create_res1 = $this->chatkit->createUser([
             'id' => $user_id1,
@@ -255,15 +252,13 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
 
         sleep(2);
 
-        $before_second_user_timestamp = date('c');
-
         $create_res2 = $this->chatkit->createUser([
             'id' => $user_id2,
             'name' => 'Ham2'
         ]);
         $this->assertEquals($create_res2['status'], 201);
 
-        $get_users_res1 = $this->chatkit->getUsers();
+        $get_users_res1 = $this->chatkit->getUsers([ 'from_timestamp' => $create_res1['body']['created_at'] ]);
         $this->assertEquals($get_users_res1['status'], 200);
         $this->assertEquals(count($get_users_res1['body']), 2);
         $this->assertEquals($get_users_res1['body'][0]['id'], $user_id1);
@@ -271,7 +266,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($get_users_res1['body'][1]['id'], $user_id2);
         $this->assertEquals($get_users_res1['body'][1]['name'], 'Ham2');
 
-        $get_users_res2 = $this->chatkit->getUsers([ 'from_timestamp' => $before_second_user_timestamp ]);
+        $get_users_res2 = $this->chatkit->getUsers([ 'from_timestamp' => $create_res2['body']['created_at'] ]);
         $this->assertEquals($get_users_res2['status'], 200);
         $this->assertEquals(count($get_users_res2['body']), 1);
         $this->assertEquals($get_users_res2['body'][0]['id'], $user_id2);
@@ -305,6 +300,899 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $names = array_map([$this, 'extractName'], $get_users_res['body']);
         $this->assertEmpty(array_diff($ids, [$user_id, $user_id2]));
         $this->assertEmpty(array_diff($names, ['Ham', 'Ham2']));
+    }
+
+    public function testCreateRoomShouldRaiseAnExcepctionIfNoNameIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->createRoom([ 'creator_id' => 'ham' ]);
+    }
+
+    public function testCreateRoomShouldRaiseAnExcepctionIfNoCreatorIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->createRoom([ 'name' => 'my room' ]);
+    }
+
+    public function testCreateRoomShouldReturnAResponsePayloadIfACreatorIDAndNameAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+        $this->assertArrayHasKey('id', $room_res['body']);
+        $this->assertEquals($room_res['body']['name'], 'my room');
+        $this->assertFalse($room_res['body']['private']);
+        $this->assertEquals($room_res['body']['member_user_ids'], [$user_id]);
+    }
+
+    public function testCreateRoomShouldReturnAResponsePayloadIfACreatorIDNameAndUserIDsAreProvidedAndTheRoomIsPrivate()
+    {
+        $user_id1 = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_id2 = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUsers([
+            'users' => [
+                [ 'id' => $user_id1, 'name' => 'Ham' ],
+                [ 'id' => $user_id2, 'name' => 'Ham2' ]
+            ]
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id1,
+            'name' => 'my room',
+            'user_ids' => [$user_id2],
+            'private' => true
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+        $this->assertArrayHasKey('id', $room_res['body']);
+        $this->assertEquals($room_res['body']['name'], 'my room');
+        $this->assertTrue($room_res['body']['private']);
+        $this->assertEmpty(array_diff($room_res['body']['member_user_ids'], [$user_id1, $user_id2]));
+    }
+
+    public function testUpdateRoomShouldRaiseAnExceptionIfNoIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->updateRoom([ 'name' => 'new name' ]);
+    }
+
+    public function testUpdateRoomShouldReturnAResponsePayloadIfAValidSetOfOptionsAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $update_res = $this->chatkit->updateRoom([
+            'id' => $room_res['body']['id'],
+            'name' => 'new name',
+            'private' => true
+        ]);
+        $this->assertEquals($update_res['status'], 204);
+        $this->assertEquals($update_res['body'], null);
+    }
+
+    public function testDeleteRoomShouldRaiseAnExceptionIfNoIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->deleteRoom([]);
+    }
+
+    public function testDeleteRoomShouldReturnAResponsePayloadIfAnIDIsProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $delete_res = $this->chatkit->deleteRoom([
+            'id' => $room_res['body']['id']
+        ]);
+        $this->assertEquals($delete_res['status'], 204);
+        $this->assertEquals($delete_res['body'], null);
+    }
+
+    public function testGetRoomShouldRaiseAnExceptionIfNoIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->getRoom([]);
+    }
+
+    public function testGetRoomShouldReturnAResponsePayloadIfAnIDIsProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $get_res = $this->chatkit->getRoom([
+            'id' => $room_res['body']['id']
+        ]);
+        $this->assertEquals($get_res['status'], 200);
+        $this->assertEquals($get_res['body']['name'], 'my room');
+        $this->assertFalse($get_res['body']['private']);
+        $this->assertEmpty(array_diff($get_res['body']['member_user_ids'], [$user_id]));
+    }
+
+    public function testGetRoomsShouldReturnAResponsePayloadIfNoOptionsAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res1 = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res1['status'], 201);
+
+        $room_res2 = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my second room'
+        ]);
+        $this->assertEquals($room_res2['status'], 201);
+
+        $get_rooms_res = $this->chatkit->getRooms();
+        $this->assertEquals($get_rooms_res['status'], 200);
+        $this->assertEquals(count($get_rooms_res['body']), 2);
+        $this->assertEquals($get_rooms_res['body'][0]['id'], $room_res1['body']['id']);
+        $this->assertEquals($get_rooms_res['body'][0]['name'], 'my room');
+        $this->assertFalse($get_rooms_res['body'][0]['private']);
+        $this->assertEquals($get_rooms_res['body'][1]['id'], $room_res2['body']['id']);
+        $this->assertEquals($get_rooms_res['body'][1]['name'], 'my second room');
+        $this->assertFalse($get_rooms_res['body'][1]['private']);
+    }
+
+    public function testGetRoomsShouldReturnAResponsePayloadIfIncludePrivateIsSpecified()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res1 = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room',
+            'private' => true
+        ]);
+        $this->assertEquals($room_res1['status'], 201);
+
+        $room_res2 = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my second room'
+        ]);
+        $this->assertEquals($room_res2['status'], 201);
+
+        $get_rooms_res1 = $this->chatkit->getRooms();
+        $this->assertEquals($get_rooms_res1['status'], 200);
+        $this->assertEquals(count($get_rooms_res1['body']), 1);
+        $this->assertEquals($get_rooms_res1['body'][0]['id'], $room_res2['body']['id']);
+        $this->assertEquals($get_rooms_res1['body'][0]['name'], 'my second room');
+        $this->assertFalse($get_rooms_res1['body'][0]['private']);
+
+        $get_rooms_res2 = $this->chatkit->getRooms([ 'include_private' => true ]);
+        $this->assertEquals($get_rooms_res2['status'], 200);
+        $this->assertEquals(count($get_rooms_res2['body']), 2);
+        $this->assertEquals($get_rooms_res2['body'][0]['id'], $room_res1['body']['id']);
+        $this->assertEquals($get_rooms_res2['body'][0]['name'], 'my room');
+        $this->assertTrue($get_rooms_res2['body'][0]['private']);
+        $this->assertEquals($get_rooms_res2['body'][1]['id'], $room_res2['body']['id']);
+        $this->assertEquals($get_rooms_res2['body'][1]['name'], 'my second room');
+        $this->assertFalse($get_rooms_res2['body'][1]['private']);
+    }
+
+    public function testGetRoomsShouldReturnAResponsePayloadIfIncludedPrivateAndFromIDAreSpecified()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res1 = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room',
+            'private' => true
+        ]);
+        $this->assertEquals($room_res1['status'], 201);
+
+        $room_res2 = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my second room'
+        ]);
+        $this->assertEquals($room_res2['status'], 201);
+
+        $get_rooms_res1 = $this->chatkit->getRooms();
+        $this->assertEquals($get_rooms_res1['status'], 200);
+        $this->assertEquals(count($get_rooms_res1['body']), 1);
+        $this->assertEquals($get_rooms_res1['body'][0]['id'], $room_res2['body']['id']);
+        $this->assertEquals($get_rooms_res1['body'][0]['name'], 'my second room');
+        $this->assertFalse($get_rooms_res1['body'][0]['private']);
+
+        $get_rooms_res2 = $this->chatkit->getRooms([
+            'include_private' => true,
+            'from_id' => $room_res1['body']['id']
+        ]);
+        $this->assertEquals($get_rooms_res2['status'], 200);
+        $this->assertEquals(count($get_rooms_res2['body']), 1);
+        $this->assertEquals($get_rooms_res2['body'][0]['id'], $room_res2['body']['id']);
+        $this->assertEquals($get_rooms_res2['body'][0]['name'], 'my second room');
+        $this->assertFalse($get_rooms_res2['body'][0]['private']);
+
+        $get_rooms_res3 = $this->chatkit->getRooms([
+            'include_private' => true,
+            'from_id' => $room_res2['body']['id']
+        ]);
+        $this->assertEquals($get_rooms_res3['status'], 200);
+        $this->assertEquals(count($get_rooms_res3['body']), 0);
+    }
+
+    public function testGetUserRoomsShouldRaiseAnExceptionIfNoIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->getUserRooms([]);
+    }
+
+    public function testGetUserRoomsShouldReturnAResponsePayloadIfAnIDIsProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $get_user_rooms_res = $this->chatkit->getRooms([ 'id' => $user_id ]);
+        $this->assertEquals($get_user_rooms_res['status'], 200);
+        $this->assertEquals(count($get_user_rooms_res['body']), 1);
+        $this->assertEquals($get_user_rooms_res['body'][0]['id'], $room_res['body']['id']);
+        $this->assertEquals($get_user_rooms_res['body'][0]['name'], 'my room');
+        $this->assertFalse($get_user_rooms_res['body'][0]['private']);
+    }
+
+    public function testGetUserRoomsShouldReturnAResponsePayloadIfAnIDIsProvidedAndOnlyReturnTheCorrectRooms()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $user_id2 = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res2 = $this->chatkit->createUser([
+            'id' => $user_id2,
+            'name' => 'Ham2'
+        ]);
+        $this->assertEquals($user_res2['status'], 201);
+
+        $room_res2 = $this->chatkit->createRoom([
+            'creator_id' => $user_id2,
+            'name' => 'my second room'
+        ]);
+        $this->assertEquals($room_res2['status'], 201);
+
+        $get_user_rooms_res = $this->chatkit->getUserRooms([ 'id' => $user_id ]);
+        $this->assertEquals($get_user_rooms_res['status'], 200);
+        $this->assertEquals(count($get_user_rooms_res['body']), 1);
+        $this->assertEquals($get_user_rooms_res['body'][0]['id'], $room_res['body']['id']);
+        $this->assertEquals($get_user_rooms_res['body'][0]['name'], 'my room');
+        $this->assertFalse($get_user_rooms_res['body'][0]['private']);
+    }
+
+    public function testGetUserJoinableRoomsShouldRaiseAnExceptionIfNoIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->getUserJoinableRooms([]);
+    }
+
+    public function testGetUserJoinableRoomsShouldReturnAResponsePayloadIfAnIDIsProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $user_id2 = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res2 = $this->chatkit->createUser([
+            'id' => $user_id2,
+            'name' => 'Ham2'
+        ]);
+        $this->assertEquals($user_res2['status'], 201);
+
+        $get_user_rooms_res = $this->chatkit->getUserJoinableRooms([ 'id' => $user_id ]);
+        $this->assertEquals($get_user_rooms_res['status'], 200);
+        $this->assertEquals(count($get_user_rooms_res['body']), 0);
+
+        $room_res2 = $this->chatkit->createRoom([
+            'creator_id' => $user_id2,
+            'name' => 'my second room'
+        ]);
+        $this->assertEquals($room_res2['status'], 201);
+
+        $get_user_rooms_res = $this->chatkit->getUserJoinableRooms([ 'id' => $user_id ]);
+        $this->assertEquals($get_user_rooms_res['status'], 200);
+        $this->assertEquals(count($get_user_rooms_res['body']), 1);
+        $this->assertEquals($get_user_rooms_res['body'][0]['id'], $room_res2['body']['id']);
+        $this->assertEquals($get_user_rooms_res['body'][0]['name'], 'my second room');
+        $this->assertFalse($get_user_rooms_res['body'][0]['private']);
+    }
+
+    public function testAddUsersToRoomShouldRaiseAnExceptionIfNoRoomIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->addUsersToRoom([ 'user_ids' => ['ham'] ]);
+    }
+
+    public function testAddUsersToRoomShouldRaiseAnExceptionIfNoUserIDsAreProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->addUsersToRoom([ 'room_id' => '123' ]);
+    }
+
+    public function testAddUsersToRoomShouldReturnAResponsePayloadIfARoomIDAndUserIDsAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $user_id2 = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res2 = $this->chatkit->createUser([
+            'id' => $user_id2,
+            'name' => 'Ham2'
+        ]);
+        $this->assertEquals($user_res2['status'], 201);
+
+        $user_id3 = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res3 = $this->chatkit->createUser([
+            'id' => $user_id3,
+            'name' => 'Ham3'
+        ]);
+        $this->assertEquals($user_res3['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $add_users_res = $this->chatkit->addUsersToRoom([
+            'room_id' => $room_res['body']['id'],
+            'user_ids' => [$user_id2, $user_id3]
+        ]);
+        $this->assertEquals($add_users_res['status'], 204);
+        $this->assertEquals($add_users_res['body'], null);
+
+        $get_res = $this->chatkit->getRoom([
+            'id' => $room_res['body']['id']
+        ]);
+        $this->assertEquals($get_res['status'], 200);
+        $this->assertEquals($get_res['body']['name'], 'my room');
+        $this->assertFalse($get_res['body']['private']);
+        $this->assertEmpty(array_diff($get_res['body']['member_user_ids'], [$user_id, $user_id2, $user_id3]));
+    }
+
+    public function testRemoveUsersFromRoomShouldRaiseAnExceptionIfNoRoomIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->removeUsersFromRoom([ 'user_ids' => ['ham'] ]);
+    }
+
+    public function testRemoveUsersFromRoomShouldRaiseAnExceptionIfNoUserIDsAreProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->removeUsersFromRoom([ 'room_id' => '123' ]);
+    }
+
+    public function testRemoveUsersFromRoomShouldReturnAResponsePayloadIfARoomIDAndUserIDsAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $user_id2 = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res2 = $this->chatkit->createUser([
+            'id' => $user_id2,
+            'name' => 'Ham2'
+        ]);
+        $this->assertEquals($user_res2['status'], 201);
+
+        $user_id3 = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res3 = $this->chatkit->createUser([
+            'id' => $user_id3,
+            'name' => 'Ham3'
+        ]);
+        $this->assertEquals($user_res3['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room',
+            'user_ids' => [$user_id2, $user_id3]
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $remove_users_res = $this->chatkit->removeUsersFromRoom([
+            'room_id' => $room_res['body']['id'],
+            'user_ids' => [$user_id3]
+        ]);
+        $this->assertEquals($remove_users_res['status'], 204);
+        $this->assertEquals($remove_users_res['body'], null);
+
+        $get_res = $this->chatkit->getRoom([
+            'id' => $room_res['body']['id']
+        ]);
+        $this->assertEquals($get_res['status'], 200);
+        $this->assertEquals($get_res['body']['name'], 'my room');
+        $this->assertFalse($get_res['body']['private']);
+        $this->assertEmpty(array_diff($get_res['body']['member_user_ids'], [$user_id, $user_id2]));
+    }
+
+    public function testSendMessageRaisesAnExceptionIfNoRoomIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->sendMessage([ 'sender_id' => 'ham', 'text' => 'hi' ]);
+    }
+
+    public function testSendMessageRaisesAnExceptionIfNoSenderIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->sendMessage([ 'room_id' => '123', 'text' => 'hi' ]);
+    }
+
+    public function testSendMessageRaisesAnExceptionIfNoTextIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->sendMessage([ 'sender_id' => 'ham', 'room_id' => '123' ]);
+    }
+
+    public function testSendMessageRaisesAnExceptionIfNoResourceLinkIsProvidedForAMessageWithAnAttachment()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->sendMessage([
+            'room_id' => '123',
+            'sender_id' => 'ham',
+            'text' => 'hi',
+            'attachment' => [
+                'type' => 'audio'
+            ]
+        ]);
+    }
+
+    public function testSendMessageRaisesAnExceptionIfNoTypeIsProvidedForAMessageWithAnAttachment()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->sendMessage([
+            'room_id' => '123',
+            'sender_id' => 'ham',
+            'text' => 'hi',
+            'attachment' => [
+                'resource_link' => 'https://placekitten.com/200/300'
+            ]
+        ]);
+    }
+
+    public function testSendMessageRaisesAnExceptionIfAnInvalidTypeIsProvidedForAMessageWithAnAttachment()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->sendMessage([
+            'room_id' => '123',
+            'sender_id' => 'ham',
+            'text' => 'hi',
+            'attachment' => [
+                'resource_link' => 'https://placekitten.com/200/300',
+                'type' => 'somethingstupid'
+            ]
+        ]);
+    }
+
+    public function testSendMessageShouldReturnAResponsePayloadIfARoomIDSenderIDAndTextAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $send_msg_res = $this->chatkit->sendMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'text' => 'testing'
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+    }
+
+    public function testSendMessageShouldReturnAResponsePayloadIfARoomIDSenderIDTextAndALinkAttachmentAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $send_msg_res = $this->chatkit->sendMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'text' => 'testing',
+            'attachment' => [
+                'resource_link' => 'https://placekitten.com/200/300',
+                'type' => 'image'
+            ]
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+    }
+
+    public function testGetRoomMessagesRaisesAnExceptionIfNoRoomIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->getRoomMessages([]);
+    }
+
+    public function testGetRoomMessagesShouldReturnAResponsePayloadIfARoomIDIsProvide()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $send_msg_res1 = $this->chatkit->sendMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'text' => 'hi 1'
+        ]);
+        $this->assertEquals($send_msg_res1['status'], 201);
+
+        $send_msg_res2 = $this->chatkit->sendMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'text' => 'hi 2'
+        ]);
+        $this->assertEquals($send_msg_res2['status'], 201);
+
+        $get_msg_res = $this->chatkit->getRoomMessages([ 'room_id' => $room_res['body']['id'] ]);
+        $this->assertEquals($get_msg_res['status'], 200);
+        $this->assertEquals(count($get_msg_res['body']), 2);
+        $this->assertEquals($get_msg_res['body'][0]['id'], $send_msg_res2['body']['message_id']);
+        $this->assertEquals($get_msg_res['body'][0]['text'], 'hi 2');
+        $this->assertEquals($get_msg_res['body'][0]['user_id'], $user_id);
+        $this->assertEquals($get_msg_res['body'][0]['room_id'], $room_res['body']['id']);
+        $this->assertEquals($get_msg_res['body'][1]['id'], $send_msg_res1['body']['message_id']);
+        $this->assertEquals($get_msg_res['body'][1]['text'], 'hi 1');
+        $this->assertEquals($get_msg_res['body'][1]['user_id'], $user_id);
+        $this->assertEquals($get_msg_res['body'][1]['room_id'], $room_res['body']['id']);
+    }
+
+    public function testGetRoomMessagesShouldReturnAResponsePayloadIfARoomIDLimitInitialIDAndDirectionAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $send_msg_opts = [ 'sender_id' => $user_id, 'room_id' => $room_res['body']['id'] ];
+
+        $send_msg_res1 = $this->chatkit->sendMessage(array_merge($send_msg_opts, [ 'text' => 'hi 1' ]));
+        $this->assertEquals($send_msg_res1['status'], 201);
+        $send_msg_res2 = $this->chatkit->sendMessage(array_merge($send_msg_opts, [ 'text' => 'hi 2' ]));
+        $this->assertEquals($send_msg_res2['status'], 201);
+        $send_msg_res3 = $this->chatkit->sendMessage(array_merge($send_msg_opts, [ 'text' => 'hi 3' ]));
+        $this->assertEquals($send_msg_res3['status'], 201);
+        $send_msg_res4 = $this->chatkit->sendMessage(array_merge($send_msg_opts, [ 'text' => 'hi 4' ]));
+        $this->assertEquals($send_msg_res4['status'], 201);
+
+        $get_msg_res = $this->chatkit->getRoomMessages([
+            'room_id' => $room_res['body']['id'],
+            'limit' => 2,
+            'direction' => 'newer',
+            'initial_id' => $send_msg_res2['body']['message_id']
+        ]);
+        $this->assertEquals($get_msg_res['status'], 200);
+        $this->assertEquals(count($get_msg_res['body']), 2);
+        $this->assertEquals($get_msg_res['body'][0]['id'], $send_msg_res3['body']['message_id']);
+        $this->assertEquals($get_msg_res['body'][0]['text'], 'hi 3');
+        $this->assertEquals($get_msg_res['body'][0]['user_id'], $user_id);
+        $this->assertEquals($get_msg_res['body'][0]['room_id'], $room_res['body']['id']);
+        $this->assertEquals($get_msg_res['body'][1]['id'], $send_msg_res4['body']['message_id']);
+        $this->assertEquals($get_msg_res['body'][1]['text'], 'hi 4');
+        $this->assertEquals($get_msg_res['body'][1]['user_id'], $user_id);
+        $this->assertEquals($get_msg_res['body'][1]['room_id'], $room_res['body']['id']);
+    }
+
+    public function testDeleteMessageRaisesAnExceptionIfNoIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->deleteMessage([]);
+    }
+
+    public function testDeleteMessageShouldReturnAResponsePayloadIfAnIDIsProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $send_msg_res = $this->chatkit->sendMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'text' => 'testing'
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+
+        $delete_msg_res = $this->chatkit->deleteMessage([ 'id' => $send_msg_res['body']['message_id'] ]);
+        $this->assertEquals($delete_msg_res['status'], 204);
+        $this->assertEquals($delete_msg_res['body'], null);
+    }
+
+    public function testSetReadCursorRaisesAnExceptionIfNoRoomIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->setReadCursor([ 'user_id' => 'ham', 'position' => 123 ]);
+    }
+
+    public function testSetReadCursorRaisesAnExceptionIfNoUserIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->setReadCursor([ 'room_id' => '123', 'position' => 123 ]);
+    }
+
+    public function testSetReadCursorRaisesAnExceptionIfNoPositionIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->setReadCursor([ 'user_id' => 'ham', 'room_id' => '123' ]);
+    }
+
+    public function testSetReadCursorShouldReturnAResponsePayloadIfARoomIDUserIDAndPositionAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $set_cursor_res = $this->chatkit->setReadCursor([
+            'user_id' => 'ham',
+            'room_id' => $room_res['body']['id'],
+            'position' => 123
+        ]);
+        $this->assertEquals($set_cursor_res['status'], 201);
+        $this->assertEquals($set_cursor_res['body'], []);
+    }
+
+    public function testGetReadCursorRaisesAnExceptionIfNoUserIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->GetReadCursor([ 'room_id' => '123' ]);
+    }
+
+    public function testGetReadCursorRaisesAnExceptionIfNoRoomIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->GetReadCursor([ 'user_id' => 'ham' ]);
+    }
+
+    public function testGetReadCursorShouldReturnAResponsePayloadIfARoomIDAndUserIDAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $set_cursor_res = $this->chatkit->setReadCursor([
+            'user_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'position' => 123
+        ]);
+        $this->assertEquals($set_cursor_res['status'], 201);
+
+        $get_cursor_res = $this->chatkit->getReadCursor([
+            'user_id' => $user_id,
+            'room_id' => $room_res['body']['id']
+        ]);
+        $this->assertEquals($get_cursor_res['status'], 200);
+        $this->assertArrayHasKey('updated_at', $get_cursor_res['body']);
+        $this->assertEquals($get_cursor_res['body']['cursor_type'], 0);
+        $this->assertEquals($get_cursor_res['body']['position'], 123);
+        $this->assertEquals($get_cursor_res['body']['room_id'], $room_res['body']['id']);
+        $this->assertEquals($get_cursor_res['body']['user_id'], $user_id);
+    }
+
+    public function testGetUserReadCursorsRaisesAnExceptionIfNoUserIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->GetUserReadCursors([]);
+    }
+
+    public function testGetUserReadCursorsShouldReturnAResponsePayloadIfAUserIDIsProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $set_cursor_res = $this->chatkit->setReadCursor([
+            'user_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'position' => 123
+        ]);
+        $this->assertEquals($set_cursor_res['status'], 201);
+
+        $get_cursors_res = $this->chatkit->getUserReadCursors([
+            'user_id' => $user_id
+        ]);
+        $this->assertEquals($get_cursors_res['status'], 200);
+        $this->assertEquals(count($get_cursors_res['body']), 1);
+        $this->assertArrayHasKey('updated_at', $get_cursors_res['body'][0]);
+        $this->assertEquals($get_cursors_res['body'][0]['cursor_type'], 0);
+        $this->assertEquals($get_cursors_res['body'][0]['position'], 123);
+        $this->assertEquals($get_cursors_res['body'][0]['room_id'], $room_res['body']['id']);
+        $this->assertEquals($get_cursors_res['body'][0]['user_id'], $user_id);
+    }
+
+    public function testGetRoomReadCursorsRaisesAnExceptionIfNoRoomIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->GetRoomReadCursors([]);
+    }
+
+    public function testGetRoomReadCursorsShouldReturnAResponsePayloadIfARoomIDIsProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $set_cursor_res = $this->chatkit->setReadCursor([
+            'user_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'position' => 123
+        ]);
+        $this->assertEquals($set_cursor_res['status'], 201);
+
+        $get_cursors_res = $this->chatkit->getRoomReadCursors([
+            'room_id' => $room_res['body']['id']
+        ]);
+        $this->assertEquals($get_cursors_res['status'], 200);
+        $this->assertEquals(count($get_cursors_res['body']), 1);
+        $this->assertArrayHasKey('updated_at', $get_cursors_res['body'][0]);
+        $this->assertEquals($get_cursors_res['body'][0]['cursor_type'], 0);
+        $this->assertEquals($get_cursors_res['body'][0]['position'], 123);
+        $this->assertEquals($get_cursors_res['body'][0]['room_id'], $room_res['body']['id']);
+        $this->assertEquals($get_cursors_res['body'][0]['user_id'], $user_id);
     }
 
     // call like this: guidv4(openssl_random_pseudo_bytes(16));
