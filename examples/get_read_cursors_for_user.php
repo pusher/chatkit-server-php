@@ -7,4 +7,4 @@ $chatkit = new Chatkit\Chatkit([
   'key' => 'your:key'
 ]);
 
-print_r($chatkit->getUserReadCursors([ 'user_id' =>  'ham' ]));
+print_r($chatkit->getReadCursorsForUser([ 'user_id' =>  'ham' ]));

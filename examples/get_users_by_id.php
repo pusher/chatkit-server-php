@@ -7,6 +7,6 @@ $chatkit = new Chatkit\Chatkit([
   'key' => 'your:key'
 ]);
 
-print_r($chatkit->getUsersByIds([
+print_r($chatkit->getUsersById([
   'user_ids' => ['ham', 'phptest']
 ]));

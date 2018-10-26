@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `getUsersByIds` is now `getUsersById`
 - `getUsers` now takes an array with an optional `from_timestamp` key instead of a `from_ts` key
+- `getUserReadCursors` is now `getReadCursorsForUser`
 
 ### Added
 
@@ -59,7 +60,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `updatePermissionsForGlobalRole`
   - `updatePermissionsForRoomRole`
   - `getReadCursor`
-  - `getRoomReadCursors`
+  - `getReadCursorsForRoom`
   - `apiRequest`
   - `authorizerRequest`
   - `cursorsRequest`

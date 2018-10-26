@@ -1115,13 +1115,13 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($get_cursor_res['body']['user_id'], $user_id);
     }
 
-    public function testGetUserReadCursorsRaisesAnExceptionIfNoUserIDIsProvided()
+    public function testGetReadCursorsRaisesAnExceptionIfNoUserIDIsProvidedForUser()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->GetUserReadCursors([]);
+        $this->chatkit->GetReadCursorsForUser([]);
     }
 
-    public function testGetUserReadCursorsShouldReturnAResponsePayloadIfAUserIDIsProvided()
+    public function testGetReadCursorsShouldReturnAResponsePayloadIfAUserIDIsProvidedForUser()
     {
         $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
         $user_res = $this->chatkit->createUser([
@@ -1143,7 +1143,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         ]);
         $this->assertEquals($set_cursor_res['status'], 201);
 
-        $get_cursors_res = $this->chatkit->getUserReadCursors([
+        $get_cursors_res = $this->chatkit->getReadCursorsForUser([
             'user_id' => $user_id
         ]);
         $this->assertEquals($get_cursors_res['status'], 200);
@@ -1155,13 +1155,13 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($get_cursors_res['body'][0]['user_id'], $user_id);
     }
 
-    public function testGetRoomReadCursorsRaisesAnExceptionIfNoRoomIDIsProvided()
+    public function testGetReadCursorsRaisesAnExceptionIfNoRoomIDIsProvidedForRoom()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->GetRoomReadCursors([]);
+        $this->chatkit->GetReadCursorsForRoom([]);
     }
 
-    public function testGetRoomReadCursorsShouldReturnAResponsePayloadIfARoomIDIsProvided()
+    public function testGetReadCursorsShouldReturnAResponsePayloadIfARoomIDIsProvidedForRoom()
     {
         $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
         $user_res = $this->chatkit->createUser([
@@ -1183,7 +1183,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         ]);
         $this->assertEquals($set_cursor_res['status'], 201);
 
-        $get_cursors_res = $this->chatkit->getRoomReadCursors([
+        $get_cursors_res = $this->chatkit->getReadCursorsForRoom([
             'room_id' => $room_res['body']['id']
         ]);
         $this->assertEquals($get_cursors_res['status'], 200);

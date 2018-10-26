@@ -773,7 +773,7 @@ class Chatkit
      * @return array
      * @throws ChatkitException or MissingArgumentException
      */
-    public function getUserReadCursors($options)
+    public function getReadCursorsForUser($options)
     {
         if (!isset($options['user_id'])) {
             throw new MissingArgumentException('You must provide the ID of the user that you want the read cursors for');
@@ -797,7 +797,7 @@ class Chatkit
      * @return array
      * @throws ChatkitException or MissingArgumentException
      */
-    public function getRoomReadCursors($options)
+    public function getReadCursorsForRoom($options)
     {
         if (!isset($options['room_id'])) {
             throw new MissingArgumentException('You must provide the ID of the room that you want the read cursors for');
