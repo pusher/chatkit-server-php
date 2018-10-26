@@ -25,6 +25,9 @@ class Chatkit
     protected $authorizer_settings = array();
     protected $cursor_settings = array();
 
+    const GLOBAL_SCOPE = 'global';
+    const ROOM_SCOPE = 'room';
+
     /**
      *
      * Initializes a new Chatkit instance.
@@ -608,7 +611,103 @@ class Chatkit
 
     // Roles and permissions API
 
-    // TODO
+    public function createGlobalRole($options)
+    {
+        $options['scope'] = self::GLOBAL_SCOPE;
+        return $this->createRole($options);
+    }
+
+    public function createRoomRole($options)
+    {
+        $options['scope'] = self::ROOM_SCOPE;
+        return $this->createRole($options);
+    }
+
+    public function deleteGlobalRole($options)
+    {
+        $options['scope'] = self::GLOBAL_SCOPE;
+        return $this->deleteRole($options);
+    }
+
+    public function deleteRoomRole($options)
+    {
+        $options['scope'] = self::ROOM_SCOPE;
+        return $this->deleteRole($options);
+    }
+
+    public function assignGlobalRoleToUser($options)
+    {
+        return $this->assignRoleToUser($options);
+    }
+
+    public function assignRoomRoleToUser($options)
+    {
+        if (!isset($options['room_id'])) {
+            throw new MissingArgumentException('You must provide a room ID to assign a room role to a user');
+        }
+        return $this->assignRoleToUser($options);
+    }
+
+    public function getRoles()
+    {
+        return $this->authorizerRequest([
+            'method' => 'GET',
+            'path' => '/roles',
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    public function getUserRoles($options)
+    {
+        if (!isset($options['user_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user whose roles you want to fetch');
+        }
+
+        $user_id = $options['user_id'];
+
+        return $this->authorizerRequest([
+            'method' => 'GET',
+            'path' => "/users/$user_id/roles",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    public function removeGlobalRoleForUser($options)
+    {
+        return $this->removeRoleForUser($options);
+    }
+
+    public function removeRoomRoleForUser($options)
+    {
+        if (!isset($options['room_id'])) {
+            throw new MissingArgumentException('You must provide a room ID to remove a room role for a user');
+        }
+        return $this->removeRoleForUser($options);
+    }
+
+    public function getPermissionsForGlobalRole($options)
+    {
+        $options['scope'] = self::GLOBAL_SCOPE;
+        return $this->getPermissionsForRole($options);
+    }
+
+    public function getPermissionsForRoomRole($options)
+    {
+        $options['scope'] = self::ROOM_SCOPE;
+        return $this->getPermissionsForRole($options);
+    }
+
+    public function updatePermissionsForGlobalRole($options)
+    {
+        $options['scope'] = self::GLOBAL_SCOPE;
+        return $this->updatePermissionsForRole($options);
+    }
+
+    public function updatePermissionsForRoomRole($options)
+    {
+        $options['scope'] = self::ROOM_SCOPE;
+        return $this->updatePermissionsForRole($options);
+    }
 
     // Cursors API
 
@@ -764,6 +863,138 @@ class Chatkit
             'path' => "/users/$user_id/rooms",
             'jwt' => $this->getServerToken()['token'],
             'query' => $query_params
+        ]);
+    }
+
+    protected function createRole($options)
+    {
+        if (!isset($options['name'])) {
+            throw new MissingArgumentException('You must provide a name for the role');
+        }
+
+        if (!isset($options['permissions'])) {
+            throw new MissingArgumentException("You must provide permissions for the role, even if it's an empty list");
+        }
+
+        return $this->authorizerRequest([
+            'method' => 'POST',
+            'path' => '/roles',
+            'jwt' => $this->getServerToken()['token'],
+            'body' => [
+                'scope' => $options['scope'],
+                'name' => $options['name'],
+                'permissions' => $options['permissions']
+            ]
+        ]);
+    }
+
+    protected function deleteRole($options)
+    {
+        if (!isset($options['name'])) {
+            throw new MissingArgumentException("You must provide the role's name");
+        }
+
+        $role_name = rawurlencode($options['name']);
+        $scope = $options['scope'];
+
+        return $this->authorizerRequest([
+            'method' => 'DELETE',
+            'path' => "/roles/$role_name/scope/$scope",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    protected function assignRoleToUser($options)
+    {
+        if (!isset($options['name'])) {
+            throw new MissingArgumentException("You must provide the role's name");
+        }
+
+        if (!isset($options['user_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user you want to assign the role to');
+        }
+
+        $body = [
+            'name' => $options['name']
+        ];
+
+        if (isset($options['room_id'])) {
+            $body['room_id'] = $options['room_id'];
+        }
+
+        $user_id = rawurlencode($options['user_id']);
+
+        return $this->authorizerRequest([
+            'method' => 'PUT',
+            'path' => "/users/$user_id/roles",
+            'jwt' => $this->getServerToken()['token'],
+            'body' => $body
+        ]);
+    }
+
+    protected function removeRoleForUser($options)
+    {
+        if (!isset($options['user_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user you want to remove the role for');
+        }
+
+        $user_id = rawurlencode($options['user_id']);
+
+        $req_opts = [
+            'method' => 'DELETE',
+            'path' => "/users/$user_id/roles",
+            'jwt' => $this->getServerToken()['token'],
+        ];
+
+        if (isset($options['room_id'])) {
+            $req_opts['query'] = [ 'room_id' => $options['room_id'] ];
+        }
+
+        return $this->authorizerRequest($req_opts);
+    }
+
+    protected function getPermissionsForRole($options)
+    {
+        if (!isset($options['name'])) {
+            throw new MissingArgumentException('You must provide the name of the role you want to fetch the permissions of');
+        }
+
+        $role_name = rawurlencode($options['name']);
+        $scope = $options['scope'];
+
+        return $this->authorizerRequest([
+            'method' => 'GET',
+            'path' => "/roles/$role_name/scope/$scope/permissions",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    protected function updatePermissionsForRole($options)
+    {
+        if (!isset($options['name'])) {
+            throw new MissingArgumentException('You must provide the name of the role you want to update the permissions of');
+        }
+
+        if ((!isset($options['permissions_to_add']) || empty($options['permissions_to_add'])) && (!isset($options['permissions_to_remove']) || empty($options['permissions_to_remove']))) {
+            throw new MissingArgumentException('permissions_to_add and permissions_to_remove cannot both be empty');
+        }
+
+        $role_name = rawurlencode($options['name']);
+        $scope = $options['scope'];
+
+        $body = [];
+        if (isset($options['permissions_to_add']) && !empty($options['permissions_to_add'])) {
+            $body['add_permissions'] = $options['permissions_to_add'];
+        }
+        if (isset($options['permissions_to_remove']) && !empty($options['permissions_to_remove'])) {
+            $body['remove_permissions'] = $options['permissions_to_remove'];
+        }
+
+        return $this->authorizerRequest([
+            'method' => 'PUT',
+            'path' => "/roles/$role_name/scope/$scope/permissions",
+            'jwt' => $this->getServerToken()['token'],
+            'body' => $body
         ]);
     }
 
