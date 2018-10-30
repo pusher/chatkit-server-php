@@ -9,5 +9,5 @@ $chatkit = new Chatkit\Chatkit([
 
 print_r($chatkit->getUsers());
 
-// example with a from_ts parameter
-// print_r($chatkit->getUsers([ 'from_ts' => '2018-04-17T12:46:51Z' ]));
+// example with a from_timestamp parameter
+// print_r($chatkit->getUsers([ 'from_timestamp' => '2018-04-17T12:46:51Z' ]));

@@ -8,6 +8,8 @@ Find out more about Chatkit [here](https://pusher.com/chatkit).
 
 ## Installation
 
+**We recommend you [use composer](http://getcomposer.org/).**
+
 You can get the Chatkit PHP SDK via a composer package called `pusher-chatkit-server`. See <https://packagist.org/packages/pusher/pusher-chatkit-server>
 
 ```bash
@@ -24,11 +26,9 @@ Or add to `composer.json`:
 
 and then run `composer update`.
 
-Or you can clone or download the library files.
+Or you can clone or download the SDK files.
 
-**We recommend you [use composer](http://getcomposer.org/).**
-
-This library depends on PHP modules for cURL and JSON. See [cURL module installation instructions](http://php.net/manual/en/curl.installation.php) and [JSON module installation instructions](http://php.net/manual/en/json.installation.php).
+This SDK depends on PHP modules for cURL and JSON. See [cURL module installation instructions](http://php.net/manual/en/curl.installation.php) and [JSON module installation instructions](http://php.net/manual/en/json.installation.php).
 
 ## Getting started
 

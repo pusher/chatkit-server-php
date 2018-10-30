@@ -6,6 +6,47 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/0.5.9...HEAD)
 
+### Changed
+
+### Breaking Changes
+
+- `getUsersByIds` is now `getUsersById`
+- `getUsers` now takes an array with an optional `from_timestamp` key instead of a `from_ts` key
+- `getUserReadCursors` is now `getReadCursorsForUser`
+
+### Added
+
+- The following new methods:
+  - `generateSuToken`
+  - `createUsers`
+  - `getUser`
+  - `updateRoom`
+  - `deleteRoom`
+  - `getRoom`
+  - `getRooms`
+  - `getUserJoinableRooms`
+  - `addUsersToRoom`
+  - `removeUsersFromRoom`
+  - `createGlobalRole`
+  - `createRoomRole`
+  - `deleteGlobalRole`
+  - `deleteRoomRole`
+  - `assignGlobalRoleToUser`
+  - `assignRoomRoleToUser`
+  - `getRoles`
+  - `getUserRoles`
+  - `removeGlobalRoleForUser`
+  - `removeRoomRoleForUser`
+  - `getPermissionsForGlobalRole`
+  - `getPermissionsForRoomRole`
+  - `updatePermissionsForGlobalRole`
+  - `updatePermissionsForRoomRole`
+  - `getReadCursor`
+  - `getReadCursorsForRoom`
+  - `apiRequest`
+  - `authorizerRequest`
+  - `cursorsRequest`
+
 ## [0.5.9](https://github.com/pusher/chatkit-server-php/compare/0.5.8...0.5.9) - 2018-08-29
 
 ### Added
