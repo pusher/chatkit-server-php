@@ -6,24 +6,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/0.5.9...HEAD)
 
-## [0.5.9](https://github.com/pusher/chatkit-server-php/compare/0.5.8...0.5.9) - 2018-08-29
-
-### Added
-
-- `getRooms` functionality added. [#31](https://github.com/pusher/chatkit-server-php/pull/31) by [@philipnjuguna66](https://github.com/philipnjuguna66)
-
-## [0.5.8](https://github.com/pusher/chatkit-server-php/compare/0.5.7...0.5.8) - 2018-08-21
-
-### Added
-
-- `addUsersToRoom` and `removeUsersFromRoom` functionality added. [#29](https://github.com/pusher/chatkit-server-php/pull/29) by [@mludi](https://github.com/mludi)
-
-## [0.5.7](https://github.com/pusher/chatkit-server-php/compare/0.5.6...0.5.7) - 2018-08-14
-
-### Added
-
-- `joinRoom` functionality added. [#27](https://github.com/pusher/chatkit-server-php/pull/27) by [@mludi](https://github.com/mludi)
-
 ### Changed
 
 ### Breaking Changes
@@ -64,6 +46,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - `apiRequest`
   - `authorizerRequest`
   - `cursorsRequest`
+
+## [0.5.9](https://github.com/pusher/chatkit-server-php/compare/0.5.8...0.5.9) - 2018-08-29
+
+### Added
+
+- `getRooms` functionality added. [#31](https://github.com/pusher/chatkit-server-php/pull/31) by [@philipnjuguna66](https://github.com/philipnjuguna66)
+
+## [0.5.8](https://github.com/pusher/chatkit-server-php/compare/0.5.7...0.5.8) - 2018-08-21
+
+### Added
+
+- `addUsersToRoom` and `removeUsersFromRoom` functionality added. [#29](https://github.com/pusher/chatkit-server-php/pull/29) by [@mludi](https://github.com/mludi)
+
+## [0.5.7](https://github.com/pusher/chatkit-server-php/compare/0.5.6...0.5.7) - 2018-08-14
+
+### Added
+
+- `joinRoom` functionality added. [#27](https://github.com/pusher/chatkit-server-php/pull/27) by [@mludi](https://github.com/mludi)
 
 ## [0.5.6](https://github.com/pusher/chatkit-server-php/compare/0.5.5...0.5.6) - 2018-07-30
 
