@@ -7,4 +7,4 @@ $chatkit = new Chatkit\Chatkit([
   'key' => 'your:key'
 ]);
 
-print_r($chatkit->getUserRooms([ 'user_id' => 'ham' ]));
+print_r($chatkit->getUserRooms([ 'id' => 'ham' ]));
