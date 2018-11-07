@@ -31,6 +31,16 @@ Or you can clone or download the SDK files.
 
 This SDK depends on PHP modules for cURL and JSON. See [cURL module installation instructions](http://php.net/manual/en/curl.installation.php) and [JSON module installation instructions](http://php.net/manual/en/json.installation.php).
 
+## Deprecated versions
+
+ Versions of the library below
+ [1.0.0](https://github.com/pusher/chatkit-server-php/releases/tag/1.0.0) are
+ deprecated and support for them will soon be dropped.
+
+ It is highly recommended that you upgrade to the latest version if you're on
+ an older version. To view a list of changes, please refer to the
+ [CHANGELOG](CHANGELOG.md).
+
 ## Getting started
 
 Head over to [our documentation](https://docs.pusher.com/chatkit/reference/server-php).
