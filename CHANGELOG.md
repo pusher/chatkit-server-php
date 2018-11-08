@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.0.0...HEAD)
+## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.1.0...HEAD)
+
+## [1.1.0](https://github.com/pusher/chatkit-server-php/compare/1.0.0...1.1.0) - 2018-11-08
+
+### Added
+
+- `custom_data` option that can be passed to `createRoom` and `updateRoom`
 
 ## [1.0.0](https://github.com/pusher/chatkit-server-php/compare/0.5.9...1.0.0) - 2018-10-30
 
