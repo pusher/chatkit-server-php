@@ -359,6 +359,25 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->assertEmpty(array_diff($room_res['body']['member_user_ids'], [$user_id1, $user_id2]));
     }
 
+    public function testCreateRoomShouldReturnAResponsePayloadIfACreatorIDNameAndCustomDataAreProvided() {
+    	$user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+    	$user_res = $this->chatkit->createUser([
+    		'id' => $user_id,
+    		'name' => 'Ham'
+    	]);
+    	$this->assertEquals($user_res['status'], 201);
+
+    	$room_res = $this->chatkit->createRoom([
+    		'creator_id' => $user_id,
+            'name' => 'my room',
+            'custom_data' => array('foo' => 'bar')
+    	]);
+    	$this->assertEquals($room_res['status'], 201);
+        $this->assertArrayHasKey('id', $room_res['body']);
+        $this->assertEquals($room_res['body']['name'], 'my room');
+        $this->assertEquals($room_res['body']['custom_data'], array('foo' => 'bar'));
+    }
+
     public function testUpdateRoomShouldRaiseAnExceptionIfNoIDIsProvided()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
@@ -376,17 +395,27 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
 
         $room_res = $this->chatkit->createRoom([
             'creator_id' => $user_id,
-            'name' => 'my room'
+            'name' => 'my room',
+            'custom_data' => array('foo' => 'bar')
         ]);
         $this->assertEquals($room_res['status'], 201);
 
         $update_res = $this->chatkit->updateRoom([
             'id' => $room_res['body']['id'],
             'name' => 'new name',
-            'private' => true
+            'private' => true,
+            'custom_data' => array('foo' => 'baz')
         ]);
         $this->assertEquals($update_res['status'], 204);
         $this->assertEquals($update_res['body'], null);
+
+        $get_res = $this->chatkit->getRoom([
+            'id' => $room_res['body']['id']
+        ]);
+        $this->assertEquals($get_res['status'], 200);
+        $this->assertEquals($get_res['body']['name'], 'new name');
+        $this->assertEquals($get_res['body']['private'], true);
+        $this->assertEquals($get_res['body']['custom_data'], array('foo' => 'baz'));
     }
 
     public function testDeleteRoomShouldRaiseAnExceptionIfNoIDIsProvided()

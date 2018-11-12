@@ -345,6 +345,8 @@ class Chatkit
      *                          • private (boolean|optional): Indicates if a room should be private or public. Private by default.
      *                          • user_ids (array|optional): If you wish to add users to the room at the point of creation,
      *                              you may provide their user IDs.
+     *							. custom_data (assoc array|optional): If you wish to attach some custom data to a room,
+     *								you may provide a list of key value pairs.
      * @return array
      */
     public function createRoom($options)
@@ -365,6 +367,9 @@ class Chatkit
         }
         if (isset($options['user_ids'])) {
             $body['user_ids'] = $options['user_ids'];
+        }
+        if (isset($options['custom_data'])) {
+        	$body['custom_data'] = $options['custom_data'];
         }
 
         $token = $this->getServerToken([ 'user_id' => $options['creator_id'] ])['token'];
@@ -389,6 +394,9 @@ class Chatkit
         }
         if (isset($options['name'])) {
             $body['name'] = $options['name'];
+        }
+        if (isset($options['custom_data'])) {
+        	$body['custom_data'] = $options['custom_data'];
         }
 
         $room_id = rawurlencode($options['id']);
