@@ -55,7 +55,9 @@ class Chatkit
         $this->settings['instance_locator'] = $options['instance_locator'];
         $this->settings['key'] = $options['key'];
         $this->api_settings['service_name'] = 'chatkit';
-        $this->api_settings['service_version'] = 'v2';
+        $this->api_settings['service_version'] = 'v3';
+        $this->api_settings_v2['service_name'] = 'chatkit';
+        $this->api_settings_v2['service_version'] = 'v2';
         $this->authorizer_settings['service_name'] = 'chatkit_authorizer';
         $this->authorizer_settings['service_version'] = 'v2';
         $this->cursor_settings['service_name'] = 'chatkit_cursors';
@@ -550,7 +552,7 @@ class Chatkit
 
         $room_id = rawurlencode($options['room_id']);
 
-        return $this->apiRequest([
+        return $this->apiRequestV2([
             'method' => 'GET',
             'path' => "/rooms/$room_id/messages",
             'jwt' => $this->getServerToken()['token'],
@@ -560,15 +562,14 @@ class Chatkit
 
     public function sendMessage($options)
     {
-        if (!isset($options['sender_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the user sending the message');
-        }
-        if (!isset($options['room_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the room to send the message to');
-        }
-        if (!isset($options['text'])) {
-            throw new MissingArgumentException('You must provide some text for the message');
-        }
+        verify([SENDER_ID,
+                ROOM_ID,
+                [ 'text' => [
+                    'type' => 'string',
+                    'missing_message' =>
+                    'You must provide some text for the message' ]
+                ]
+        ], $options);
 
         $body = array(
             'text' => $options['text']
@@ -594,11 +595,60 @@ class Chatkit
         $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
         $room_id = rawurlencode($options['room_id']);
 
-        return $this->apiRequest([
+        return $this->apiRequestV2([
             'method' => 'POST',
             'path' => "/rooms/$room_id/messages",
             'jwt' => $token,
             'body' => $body
+        ]);
+    }
+
+    public function sendSimpleMessage($options)
+    {
+        verify([ [ 'text' => [
+            'type' => 'string',
+            'missing_message' =>
+            'You must provide some text for the message' ] ]
+        ], $options);
+
+        $options['parts'] = [ [ 'type' => 'text/plain',
+                                'content' => $options['text'] ]
+        ];
+        unset($options['text']);
+        return $this->sendMultipartMessage($options);
+    }
+
+    public function sendMultipartMessage($options)
+    {
+        verify([SENDER_ID,
+                ROOM_ID,
+                [ 'parts' => [
+                    'type' => 'non_empty_array',
+                    'missing_message' =>
+                    'You must provide a non-empty parts array' ]
+                ]
+        ], $options);
+
+        foreach($options['parts'] as $part) {
+            verify([ [ 'type' => [ 'type' => 'string',
+                                   'missing_message' => 'Each part must have a type' ] ],
+                     [ 'content' => OPTIONAL_STRING ],
+                     [ 'url' => OPTIONAL_STRING ]
+            ], $part);
+
+            if (!isset($part['content']) && !isset($part['url'])) {
+                throw new MissingArgumentException('Each part must define either content or url');
+            }
+        }
+
+        $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
+        $room_id = rawurlencode($options['room_id']);
+
+        return $this->apiRequest([
+            'method' => 'POST',
+            'path' => "/rooms/$room_id/messages",
+            'jwt' => $token,
+            'body' => [ 'parts' => $options['parts'] ]
         ]);
     }
 
@@ -825,6 +875,12 @@ class Chatkit
     public function apiRequest($options)
     {
         return $this->makeRequest($this->api_settings, $options);
+    }
+
+    // keep v2 for backwards compatibility
+    public function apiRequestV2($options)
+    {
+        return $this->makeRequest($this->api_settings_v2, $options);
     }
 
     public function authorizerRequest($options)
@@ -1128,5 +1184,48 @@ class Chatkit
 
         $this->log('INFO: execCurl response: '.print_r($response, true));
         return $response;
+    }
+
+};
+
+const OPTIONAL_STRING = [ 'type' => 'string', "optional" => true ];
+
+const ROOM_ID = [ 'room_id' =>
+                  [ 'type' => 'string',
+                    'missing_message' =>
+                    'You must provide the ID of the room'
+                  ]
+];
+const SENDER_ID = [ 'sender_id' =>
+                    [ 'type' => 'string',
+                      'missing_message' =>
+                      'You must provide the ID of the user sending the message'
+                    ]
+];
+
+function verify($fields, $options) {
+    foreach ($fields as $field) {
+        $name = key($field);
+        $rules = $field[$name];
+
+        if (!isset($options[$name]) && !isset($rules['optional'])) {
+            throw new MissingArgumentException($rules['missing_message']);
+        } elseif (isset($options[$name])) {
+            switch ($rules['type']) {
+            case 'string':
+                if (!is_string($options[$name])) {
+                    throw new TypeMismatchException($options[name]." must be of type string");
+                }
+                break;
+            case 'non_empty_array':
+                if (!is_array($options[$name]) || empty($options[$name])) {
+                    throw new TypeMismatchException($options[name]." must be a non-empty array");
+                }
+                break;
+            default:
+                break;
+
+            }
+        }
     }
 }
