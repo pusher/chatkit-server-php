@@ -360,19 +360,19 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testCreateRoomShouldReturnAResponsePayloadIfACreatorIDNameAndCustomDataAreProvided() {
-    	$user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-    	$user_res = $this->chatkit->createUser([
-    		'id' => $user_id,
-    		'name' => 'Ham'
-    	]);
-    	$this->assertEquals($user_res['status'], 201);
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
 
-    	$room_res = $this->chatkit->createRoom([
-    		'creator_id' => $user_id,
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
             'name' => 'my room',
             'custom_data' => array('foo' => 'bar')
-    	]);
-    	$this->assertEquals($room_res['status'], 201);
+        ]);
+        $this->assertEquals($room_res['status'], 201);
         $this->assertArrayHasKey('id', $room_res['body']);
         $this->assertEquals($room_res['body']['name'], 'my room');
         $this->assertEquals($room_res['body']['custom_data'], array('foo' => 'bar'));
@@ -926,6 +926,60 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
                 'resource_link' => 'https://placekitten.com/200/300',
                 'type' => 'image'
             ]
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+    }
+
+    public function testSendMultipartMessageShouldReturnAResponsePayloadIfPartsProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $parts = [ ['type' => 'text/plain',
+                    'content' => 'testing'],
+                   ['type' => 'image/png',
+                    'url' => 'https://example.com/image.png']
+        ];
+
+        $send_msg_res = $this->chatkit->sendMultipartMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'parts' => $parts
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+    }
+
+    public function testSendSimpleMessageShouldReturnAResponsePayloadIfARoomIDSenderIDAndTextAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $send_msg_res = $this->chatkit->sendSimpleMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'text' => 'testing'
         ]);
         $this->assertEquals($send_msg_res['status'], 201);
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
