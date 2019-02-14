@@ -27,6 +27,7 @@ class Chatkit
 
     const GLOBAL_SCOPE = 'global';
     const ROOM_SCOPE = 'room';
+    const MAX_INLINE_CONTENT_BYTE_SIZE = 2000;
 
     /**
      *
@@ -645,6 +646,13 @@ class Chatkit
 
             if (!isset($part['content']) && !isset($part['url']) && !isset($part['file'])) {
                 throw new MissingArgumentException('Each part must define either file, content or url');
+            }
+
+            // 'upgrade' big inline contents to attachments
+            if (isset($part['content']) &&
+                strlen($part['content']) > self::MAX_INLINE_CONTENT_BYTE_SIZE) {
+                $part['file'] = $part['content'];
+                unset($part['content']);
             }
 
             if (isset($part['file'])) {

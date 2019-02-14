@@ -961,6 +961,28 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
     }
 
+    public function testSendMultipartMessageShouldCreateAttachmentIfLargeInlinePartProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        // inline messages bigger than 2000 bytes should be 'upgraded'
+        // to attachments
+        $text = str_repeat('a', 2001);
+
+        $parts = [ ['type' => 'binary/octet-stream',
+                    'content' => $text ]
+        ];
+
+        $send_msg_res = $this->chatkit->sendMultipartMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'parts' => $parts
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+    }
+
     public function testSendMultipartMessageShouldReturnAResponsePayloadIfAttachmentsProvided()
     {
         $user_id = $this->makeUser();
