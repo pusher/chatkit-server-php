@@ -629,20 +629,30 @@ class Chatkit
                 ]
         ], $options);
 
-        foreach($options['parts'] as $part) {
-            verify([ [ 'type' => [ 'type' => 'string',
-                                   'missing_message' => 'Each part must have a type' ] ],
-                     [ 'content' => OPTIONAL_STRING ],
-                     [ 'url' => OPTIONAL_STRING ]
-            ], $part);
-
-            if (!isset($part['content']) && !isset($part['url'])) {
-                throw new MissingArgumentException('Each part must define either content or url');
-            }
-        }
-
+        // this assumes the token lives long enough to finish all S3 uploads
         $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
         $room_id = rawurlencode($options['room_id']);
+
+        foreach($options['parts'] as &$part) {
+            verify([ [ 'type' => [ 'type' => 'string',
+                                   'missing_message' => 'Each part must have a type' ] ],
+                     [ 'file' => OPTIONAL_STRING ],
+                     [ 'content' => OPTIONAL_STRING ],
+                     [ 'url' => OPTIONAL_STRING ],
+                     [ 'name' => OPTIONAL_STRING ],
+                     [ 'customData' => [ 'type' => 'json', 'optional' => true ] ]
+            ], $part);
+
+            if (!isset($part['content']) && !isset($part['url']) && !isset($part['file'])) {
+                throw new MissingArgumentException('Each part must define either file, content or url');
+            }
+
+            if (isset($part['file'])) {
+                $attachment_id = $this->uploadAttachment($token, $room_id, $part);
+                $part['file'] = $attachment_id;
+            }
+
+        }
 
         return $this->apiRequest([
             'method' => 'POST',
@@ -1062,6 +1072,42 @@ class Chatkit
         ]);
     }
 
+    protected function uploadAttachment($token, $room_id, $file_part) {
+        $body = $file_part['file'];
+        $content_length = strlen($body);
+
+        if ($content_length <= 0 || is_null($body)) {
+            throw new MissingArgumentException('File contents size must be greater than 0');
+        }
+
+        $attachment_req = [ 'content_type' => $file_part['type'],
+                            'content_length' => $content_length ];
+
+        foreach (['origin', 'name', 'customData'] as $field_name) {
+            if (isset($file_part[$field_name])) {
+                $attachment_req[$field_name] = $file_part[$field_name];
+            }
+        }
+
+        $attachment_response =  $this->apiRequest([
+            'method' => 'POST',
+            'path' => "/rooms/$room_id/attachments",
+            'jwt' => $token,
+            'body' => $attachment_req
+        ]);
+
+        $url = $attachment_response['body']['upload_url'];
+        $ch = $this->createRawCurl('PUT', $url, $body);
+        $upload_response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if($status !== 200) {
+            throw (new UploadException('Failed to upload attachment', $status))->setBody($response['body']);
+        }
+
+        $attachment_id = $attachment_response['body']['attachment_id'];
+        return $attachment_id;
+    }
 
     /**
      * Utility function used to create the curl object setup to interact with the Pusher API
