@@ -1062,8 +1062,9 @@ class Chatkit
         ]);
     }
 
+
     /**
-     * Utility function used to create the curl object with common settings.
+     * Utility function used to create the curl object setup to interact with the Pusher API
      */
     protected function createCurl($service_settings, $path, $jwt, $request_method, $body = null, $query_params = array())
     {
@@ -1083,6 +1084,14 @@ class Chatkit
 
         $this->log('INFO: createCurl( '.$final_url.' )');
 
+        return $this->createRawCurl($request_method, $final_url, $body, null, $jwt, true);
+    }
+
+    /**
+     * Utility function used to create the curl object with common settings.
+     */
+    protected function createRawCurl($request_method, $url, $body = null, $content_type = null, $jwt = null, $encode_json = false)
+    {
         // Create or reuse existing curl handle
         if (null === $this->ch) {
             $this->ch = curl_init();
@@ -1099,20 +1108,29 @@ class Chatkit
             curl_reset($ch);
         }
 
+        $headers = array();
+
+        if(!is_null($jwt)) {
+            array_push($headers, 'Authorization: Bearer '.$jwt);
+        }
+        if(!is_null($content_type)) {
+            array_push($headers, 'Content-Type: '.$content_type);
+        }
         // Set cURL opts and execute request
-        curl_setopt($ch, CURLOPT_URL, $final_url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-            'Authorization: Bearer '.$jwt
-        ));
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->settings['timeout']);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request_method);
 
         if (!is_null($body)) {
-            $json_encoded_body = json_encode($body);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $json_encoded_body);
+            if ($encode_json) {
+                $body = json_encode($body, JSON_ERROR_UTF8);
+                array_push($headers, 'Content-Type: application/json');
+            }
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            array_push($headers, 'Content-Length: '.strlen($body));
         }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Set custom curl options
         if (!empty($this->settings['curl_options'])) {
