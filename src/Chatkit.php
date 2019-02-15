@@ -27,6 +27,7 @@ class Chatkit
 
     const GLOBAL_SCOPE = 'global';
     const ROOM_SCOPE = 'room';
+    const MAX_INLINE_CONTENT_BYTE_SIZE = 2000;
 
     /**
      *
@@ -629,20 +630,37 @@ class Chatkit
                 ]
         ], $options);
 
-        foreach($options['parts'] as $part) {
-            verify([ [ 'type' => [ 'type' => 'string',
-                                   'missing_message' => 'Each part must have a type' ] ],
-                     [ 'content' => OPTIONAL_STRING ],
-                     [ 'url' => OPTIONAL_STRING ]
-            ], $part);
-
-            if (!isset($part['content']) && !isset($part['url'])) {
-                throw new MissingArgumentException('Each part must define either content or url');
-            }
-        }
-
+        // this assumes the token lives long enough to finish all S3 uploads
         $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
         $room_id = rawurlencode($options['room_id']);
+
+        foreach($options['parts'] as &$part) {
+            verify([ [ 'type' => [ 'type' => 'string',
+                                   'missing_message' => 'Each part must have a type' ] ],
+                     [ 'file' => OPTIONAL_STRING ],
+                     [ 'content' => OPTIONAL_STRING ],
+                     [ 'url' => OPTIONAL_STRING ],
+                     [ 'name' => OPTIONAL_STRING ],
+                     [ 'customData' => [ 'type' => 'json', 'optional' => true ] ]
+            ], $part);
+
+            if (!isset($part['content']) && !isset($part['url']) && !isset($part['file'])) {
+                throw new MissingArgumentException('Each part must define either file, content or url');
+            }
+
+            // 'upgrade' big inline contents to attachments
+            if (isset($part['content']) &&
+                strlen($part['content']) > self::MAX_INLINE_CONTENT_BYTE_SIZE) {
+                $part['file'] = $part['content'];
+                unset($part['content']);
+            }
+
+            if (isset($part['file'])) {
+                $attachment_id = $this->uploadAttachment($token, $room_id, $part);
+                $part['file'] = $attachment_id;
+            }
+
+        }
 
         return $this->apiRequest([
             'method' => 'POST',
@@ -1062,8 +1080,45 @@ class Chatkit
         ]);
     }
 
+    protected function uploadAttachment($token, $room_id, $file_part) {
+        $body = $file_part['file'];
+        $content_length = strlen($body);
+
+        if ($content_length <= 0 || is_null($body)) {
+            throw new MissingArgumentException('File contents size must be greater than 0');
+        }
+
+        $attachment_req = [ 'content_type' => $file_part['type'],
+                            'content_length' => $content_length ];
+
+        foreach (['origin', 'name', 'customData'] as $field_name) {
+            if (isset($file_part[$field_name])) {
+                $attachment_req[$field_name] = $file_part[$field_name];
+            }
+        }
+
+        $attachment_response =  $this->apiRequest([
+            'method' => 'POST',
+            'path' => "/rooms/$room_id/attachments",
+            'jwt' => $token,
+            'body' => $attachment_req
+        ]);
+
+        $url = $attachment_response['body']['upload_url'];
+        $ch = $this->createRawCurl('PUT', $url, $body);
+        $upload_response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if($status !== 200) {
+            throw (new UploadException('Failed to upload attachment', $status))->setBody($response['body']);
+        }
+
+        $attachment_id = $attachment_response['body']['attachment_id'];
+        return $attachment_id;
+    }
+
     /**
-     * Utility function used to create the curl object with common settings.
+     * Utility function used to create the curl object setup to interact with the Pusher API
      */
     protected function createCurl($service_settings, $path, $jwt, $request_method, $body = null, $query_params = array())
     {
@@ -1083,6 +1138,14 @@ class Chatkit
 
         $this->log('INFO: createCurl( '.$final_url.' )');
 
+        return $this->createRawCurl($request_method, $final_url, $body, null, $jwt, true);
+    }
+
+    /**
+     * Utility function used to create the curl object with common settings.
+     */
+    protected function createRawCurl($request_method, $url, $body = null, $content_type = null, $jwt = null, $encode_json = false)
+    {
         // Create or reuse existing curl handle
         if (null === $this->ch) {
             $this->ch = curl_init();
@@ -1099,20 +1162,29 @@ class Chatkit
             curl_reset($ch);
         }
 
+        $headers = array();
+
+        if(!is_null($jwt)) {
+            array_push($headers, 'Authorization: Bearer '.$jwt);
+        }
+        if(!is_null($content_type)) {
+            array_push($headers, 'Content-Type: '.$content_type);
+        }
         // Set cURL opts and execute request
-        curl_setopt($ch, CURLOPT_URL, $final_url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-            'Authorization: Bearer '.$jwt
-        ));
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->settings['timeout']);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request_method);
 
         if (!is_null($body)) {
-            $json_encoded_body = json_encode($body);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $json_encoded_body);
+            if ($encode_json) {
+                $body = json_encode($body, JSON_ERROR_UTF8);
+                array_push($headers, 'Content-Type: application/json');
+            }
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            array_push($headers, 'Content-Length: '.strlen($body));
         }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Set custom curl options
         if (!empty($this->settings['curl_options'])) {

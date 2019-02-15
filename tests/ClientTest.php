@@ -961,6 +961,55 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
     }
 
+    public function testSendMultipartMessageShouldCreateAttachmentIfLargeInlinePartProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        // inline messages bigger than 2000 bytes should be 'upgraded'
+        // to attachments
+        $text = str_repeat('a', 2001);
+
+        $parts = [ ['type' => 'binary/octet-stream',
+                    'content' => $text ]
+        ];
+
+        $send_msg_res = $this->chatkit->sendMultipartMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'parts' => $parts
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+    }
+
+    public function testSendMultipartMessageShouldReturnAResponsePayloadIfAttachmentsProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $file = openssl_random_pseudo_bytes(100);
+        $file_name = 'a broken image';
+
+        $parts = [ ['type' => 'image/png',
+                    'file' => $file,
+                    'name' => $file_name,
+                    'customData' => [ 'some' =>
+                                      [ 'nested' => 'data',
+                                        'number' => 42
+                                      ] ],
+                    'origin' => 'http://example.com' ]
+        ];
+
+        $send_msg_res = $this->chatkit->sendMultipartMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'parts' => $parts
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+    }
+
     public function testSendSimpleMessageShouldReturnAResponsePayloadIfARoomIDSenderIDAndTextAreProvided()
     {
         $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
@@ -1711,5 +1760,25 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
 
     protected function extractName($value) {
         return $value['name'];
+    }
+
+    protected function makeUser() {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        return $user_id;
+    }
+
+    protected function makeRoom($creator) {
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $creator,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+        return $room_res['body']['id'];
     }
 }
