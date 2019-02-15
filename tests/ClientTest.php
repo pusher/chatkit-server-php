@@ -961,6 +961,35 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
     }
 
+    public function testSendMultipartMessagesRaisesAnExceptionIfWrongTypesAreProvided()
+    {
+        $good_parts = [ ['type' => 'binary/octet-stream',
+                         'content' => 'test' ]
+        ];
+
+        $bad_parts = [ ['type' => 'binary/octet-stream',
+                        'content' => 42 ]
+        ];
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->sendMultipartMessage([ 'sender_id' => 'user_id',
+                                               'room_id' => 42,
+                                               'parts' => $good_parts
+        ]);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->sendMultipartMessage([ 'sender_id' => 42,
+                                               'room_id' => 'room_id',
+                                               'parts' => $good_parts
+        ]);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->sendMultipartMessage([ 'sender_id' => 'user_id',
+                                               'room_id' => 'room_id',
+                                               'parts' => $bad_parts
+        ]);
+    }
+
     public function testSendMultipartMessageShouldCreateAttachmentIfLargeInlinePartProvided()
     {
         $user_id = $this->makeUser();
@@ -1040,7 +1069,17 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->chatkit->fetchMultipartMessages([]);
     }
 
-    public function testFetchMultipartMessagesShouldReturnAResponsePayloadIfARoomIDIsProvide()
+    public function testFetchMultipartMessagesRaisesAnExceptionIfWrongTypesAreProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->fetchMultipartMessages([ 'room_id' => 42]);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->fetchMultipartMessages([ 'room_id' => 'correct',
+                                                 'limit' => 'incorrect']);
+    }
+
+    public function testFetchMultipartMessagesShouldReturnAResponsePayloadIfARoomIDIsProvided()
     {
         $user_id = $this->makeUser();
         $room_id = $this->makeRoom($user_id);
