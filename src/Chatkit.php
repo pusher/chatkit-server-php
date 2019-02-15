@@ -670,6 +670,27 @@ class Chatkit
         ]);
     }
 
+    public function fetchMultipartMessages($options)
+    {
+        verify([ROOM_ID,
+                [ 'limit' => OPTIONAL_INT,
+                  'direction' => OPTIONAL_STRING,
+                  'initial_id' => OPTIONAL_STRING,
+                ]
+        ], $options);
+
+        $optional_fields = ['limit', 'direction', 'initial_id'];
+        $query_params = $this->getOptionalFields($optional_fields, $options);
+        $room_id = rawurlencode($options['room_id']);
+
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => "/rooms/$room_id/messages",
+            'jwt' => $this->getServerToken()['token'],
+            'query' => $query_params
+        ]);
+    }
+
     public function deleteMessage($options)
     {
         if (!isset($options['id'])) {
@@ -1117,6 +1138,15 @@ class Chatkit
         return $attachment_id;
     }
 
+    protected function getOptionalFields($field_names, $options) {
+        $fields = [];
+        foreach ($field_names as $field_name) {
+            if(isset($options[$field_name])) {
+                $fields[$field_name] = $options[$field_name];
+            }
+        }
+    }
+
     /**
      * Utility function used to create the curl object setup to interact with the Pusher API
      */
@@ -1261,6 +1291,7 @@ class Chatkit
 };
 
 const OPTIONAL_STRING = [ 'type' => 'string', "optional" => true ];
+const OPTIONAL_INT = [ 'type' => 'int', "optional" => true ];
 
 const ROOM_ID = [ 'room_id' =>
                   [ 'type' => 'string',
@@ -1286,12 +1317,17 @@ function verify($fields, $options) {
             switch ($rules['type']) {
             case 'string':
                 if (!is_string($options[$name])) {
-                    throw new TypeMismatchException($options[name]." must be of type string");
+                    throw new TypeMismatchException($options[$name]." must be of type string");
+                }
+                break;
+            case 'int':
+                if (!is_int($options[$name]) || $options[$name] < 0) {
+                    throw new TypeMismatchException($options[$name]." must be a positive int");
                 }
                 break;
             case 'non_empty_array':
                 if (!is_array($options[$name]) || empty($options[$name])) {
-                    throw new TypeMismatchException($options[name]." must be a non-empty array");
+                    throw new TypeMismatchException($options[$name]." must be a non-empty array");
                 }
                 break;
             default:
