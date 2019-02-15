@@ -148,18 +148,8 @@ class RoleTest extends \Base {
 
     public function testAssignRoomRoleToUserShouldReturnAResponsePayloadIfANameUserIDAndRoomIDAreProvided()
     {
-        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-        $user_res = $this->chatkit->createUser([
-            'id' => $user_id,
-            'name' => 'Ham'
-        ]);
-        $this->assertEquals($user_res['status'], 201);
-
-        $room_res = $this->chatkit->createRoom([
-            'creator_id' => $user_id,
-            'name' => 'my room'
-        ]);
-        $this->assertEquals($room_res['status'], 201);
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
 
         $role_name = $this->guidv4(openssl_random_pseudo_bytes(16));
         $create_role_res = $this->chatkit->createRoomRole([
@@ -171,7 +161,7 @@ class RoleTest extends \Base {
         $assign_role_res = $this->chatkit->assignRoomRoleToUser([
             'name' => $role_name,
             'user_id' => $user_id,
-            'room_id' => $room_res['body']['id']
+            'room_id' => $room_id
         ]);
         $this->assertEquals($assign_role_res['status'], 201);
         $this->assertEquals($assign_role_res['body'], null);
@@ -277,12 +267,7 @@ class RoleTest extends \Base {
 
     public function testRemoveRoomRoleForUserShouldReturnAResponsePayloadIfAUserIDAndRoomIDAreProvided()
     {
-        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-        $user_res = $this->chatkit->createUser([
-            'id' => $user_id,
-            'name' => 'Ham'
-        ]);
-        $this->assertEquals($user_res['status'], 201);
+        $user_id = $this->makeUser();
 
         $role_name = $this->guidv4(openssl_random_pseudo_bytes(16));
         $create_role_res = $this->chatkit->createRoomRole([
@@ -291,22 +276,18 @@ class RoleTest extends \Base {
         ]);
         $this->assertEquals($create_role_res['status'], 201);
 
-        $room_res = $this->chatkit->createRoom([
-            'creator_id' => $user_id,
-            'name' => 'my room'
-        ]);
-        $this->assertEquals($room_res['status'], 201);
+        $room_id = $this->makeRoom($user_id);
 
         $assign_role_res = $this->chatkit->assignRoomRoleToUser([
             'name' => $role_name,
             'user_id' => $user_id,
-            'room_id' => $room_res['body']['id']
+            'room_id' => $room_id
         ]);
         $this->assertEquals($assign_role_res['status'], 201);
 
         $remove_role_res = $this->chatkit->removeRoomRoleForUser([
             'user_id' => $user_id,
-            'room_id' => $room_res['body']['id']
+            'room_id' => $room_id
         ]);
         $this->assertEquals($remove_role_res['status'], 204);
         $this->assertEquals($remove_role_res['body'], null);

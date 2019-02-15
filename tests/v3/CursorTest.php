@@ -22,22 +22,12 @@ class CursorTest extends \Base {
 
     public function testSetReadCursorShouldReturnAResponsePayloadIfARoomIDUserIDAndPositionAreProvided()
     {
-        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-        $user_res = $this->chatkit->createUser([
-            'id' => $user_id,
-            'name' => 'Ham'
-        ]);
-        $this->assertEquals($user_res['status'], 201);
-
-        $room_res = $this->chatkit->createRoom([
-            'creator_id' => $user_id,
-            'name' => 'my room'
-        ]);
-        $this->assertEquals($room_res['status'], 201);
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
 
         $set_cursor_res = $this->chatkit->setReadCursor([
-            'user_id' => 'ham',
-            'room_id' => $room_res['body']['id'],
+            'user_id' => $user_id,
+            'room_id' => $room_id,
             'position' => 123
         ]);
         $this->assertEquals($set_cursor_res['status'], 201);
@@ -58,35 +48,25 @@ class CursorTest extends \Base {
 
     public function testGetReadCursorShouldReturnAResponsePayloadIfARoomIDAndUserIDAreProvided()
     {
-        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-        $user_res = $this->chatkit->createUser([
-            'id' => $user_id,
-            'name' => 'Ham'
-        ]);
-        $this->assertEquals($user_res['status'], 201);
-
-        $room_res = $this->chatkit->createRoom([
-            'creator_id' => $user_id,
-            'name' => 'my room'
-        ]);
-        $this->assertEquals($room_res['status'], 201);
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
 
         $set_cursor_res = $this->chatkit->setReadCursor([
             'user_id' => $user_id,
-            'room_id' => $room_res['body']['id'],
+            'room_id' => $room_id,
             'position' => 123
         ]);
         $this->assertEquals($set_cursor_res['status'], 201);
 
         $get_cursor_res = $this->chatkit->getReadCursor([
             'user_id' => $user_id,
-            'room_id' => $room_res['body']['id']
+            'room_id' => $room_id
         ]);
         $this->assertEquals($get_cursor_res['status'], 200);
         $this->assertArrayHasKey('updated_at', $get_cursor_res['body']);
         $this->assertEquals($get_cursor_res['body']['cursor_type'], 0);
         $this->assertEquals($get_cursor_res['body']['position'], 123);
-        $this->assertEquals($get_cursor_res['body']['room_id'], $room_res['body']['id']);
+        $this->assertEquals($get_cursor_res['body']['room_id'], $room_id);
         $this->assertEquals($get_cursor_res['body']['user_id'], $user_id);
     }
 
@@ -98,22 +78,12 @@ class CursorTest extends \Base {
 
     public function testGetReadCursorsShouldReturnAResponsePayloadIfAUserIDIsProvidedForUser()
     {
-        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-        $user_res = $this->chatkit->createUser([
-            'id' => $user_id,
-            'name' => 'Ham'
-        ]);
-        $this->assertEquals($user_res['status'], 201);
-
-        $room_res = $this->chatkit->createRoom([
-            'creator_id' => $user_id,
-            'name' => 'my room'
-        ]);
-        $this->assertEquals($room_res['status'], 201);
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
 
         $set_cursor_res = $this->chatkit->setReadCursor([
             'user_id' => $user_id,
-            'room_id' => $room_res['body']['id'],
+            'room_id' => $room_id,
             'position' => 123
         ]);
         $this->assertEquals($set_cursor_res['status'], 201);
@@ -126,7 +96,7 @@ class CursorTest extends \Base {
         $this->assertArrayHasKey('updated_at', $get_cursors_res['body'][0]);
         $this->assertEquals($get_cursors_res['body'][0]['cursor_type'], 0);
         $this->assertEquals($get_cursors_res['body'][0]['position'], 123);
-        $this->assertEquals($get_cursors_res['body'][0]['room_id'], $room_res['body']['id']);
+        $this->assertEquals($get_cursors_res['body'][0]['room_id'], $room_id);
         $this->assertEquals($get_cursors_res['body'][0]['user_id'], $user_id);
     }
 
@@ -138,35 +108,25 @@ class CursorTest extends \Base {
 
     public function testGetReadCursorsShouldReturnAResponsePayloadIfARoomIDIsProvidedForRoom()
     {
-        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-        $user_res = $this->chatkit->createUser([
-            'id' => $user_id,
-            'name' => 'Ham'
-        ]);
-        $this->assertEquals($user_res['status'], 201);
-
-        $room_res = $this->chatkit->createRoom([
-            'creator_id' => $user_id,
-            'name' => 'my room'
-        ]);
-        $this->assertEquals($room_res['status'], 201);
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
 
         $set_cursor_res = $this->chatkit->setReadCursor([
             'user_id' => $user_id,
-            'room_id' => $room_res['body']['id'],
+            'room_id' => $room_id,
             'position' => 123
         ]);
         $this->assertEquals($set_cursor_res['status'], 201);
 
         $get_cursors_res = $this->chatkit->getReadCursorsForRoom([
-            'room_id' => $room_res['body']['id']
+            'room_id' => $room_id
         ]);
         $this->assertEquals($get_cursors_res['status'], 200);
         $this->assertEquals(count($get_cursors_res['body']), 1);
         $this->assertArrayHasKey('updated_at', $get_cursors_res['body'][0]);
         $this->assertEquals($get_cursors_res['body'][0]['cursor_type'], 0);
         $this->assertEquals($get_cursors_res['body'][0]['position'], 123);
-        $this->assertEquals($get_cursors_res['body'][0]['room_id'], $room_res['body']['id']);
+        $this->assertEquals($get_cursors_res['body'][0]['room_id'], $room_id);
         $this->assertEquals($get_cursors_res['body'][0]['user_id'], $user_id);
     }
 }

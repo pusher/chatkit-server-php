@@ -4,18 +4,8 @@ class MessageTest extends \Base {
 
     public function testSendMultipartMessageShouldReturnAResponsePayloadIfPartsProvided()
     {
-        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-        $user_res = $this->chatkit->createUser([
-            'id' => $user_id,
-            'name' => 'Ham'
-        ]);
-        $this->assertEquals($user_res['status'], 201);
-
-        $room_res = $this->chatkit->createRoom([
-            'creator_id' => $user_id,
-            'name' => 'my room'
-        ]);
-        $this->assertEquals($room_res['status'], 201);
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
 
         $parts = [ ['type' => 'text/plain',
                     'content' => 'testing'],
@@ -25,7 +15,7 @@ class MessageTest extends \Base {
 
         $send_msg_res = $this->chatkit->sendMultipartMessage([
             'sender_id' => $user_id,
-            'room_id' => $room_res['body']['id'],
+            'room_id' => $room_id,
             'parts' => $parts
         ]);
         $this->assertEquals($send_msg_res['status'], 201);
@@ -112,22 +102,12 @@ class MessageTest extends \Base {
 
     public function testSendSimpleMessageShouldReturnAResponsePayloadIfARoomIDSenderIDAndTextAreProvided()
     {
-        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-        $user_res = $this->chatkit->createUser([
-            'id' => $user_id,
-            'name' => 'Ham'
-        ]);
-        $this->assertEquals($user_res['status'], 201);
-
-        $room_res = $this->chatkit->createRoom([
-            'creator_id' => $user_id,
-            'name' => 'my room'
-        ]);
-        $this->assertEquals($room_res['status'], 201);
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
 
         $send_msg_res = $this->chatkit->sendSimpleMessage([
             'sender_id' => $user_id,
-            'room_id' => $room_res['body']['id'],
+            'room_id' => $room_id,
             'text' => 'testing'
         ]);
         $this->assertEquals($send_msg_res['status'], 201);
@@ -226,22 +206,12 @@ class MessageTest extends \Base {
 
     public function testDeleteMessageShouldReturnAResponsePayloadIfAnIDIsProvided()
     {
-        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
-        $user_res = $this->chatkit->createUser([
-            'id' => $user_id,
-            'name' => 'Ham'
-        ]);
-        $this->assertEquals($user_res['status'], 201);
-
-        $room_res = $this->chatkit->createRoom([
-            'creator_id' => $user_id,
-            'name' => 'my room'
-        ]);
-        $this->assertEquals($room_res['status'], 201);
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
 
         $send_msg_res = $this->chatkit->sendSimpleMessage([
             'sender_id' => $user_id,
-            'room_id' => $room_res['body']['id'],
+            'room_id' => $room_id,
             'text' => 'testing'
         ]);
         $this->assertEquals($send_msg_res['status'], 201);
