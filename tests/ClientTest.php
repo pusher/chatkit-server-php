@@ -961,6 +961,35 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
     }
 
+    public function testSendMultipartMessagesRaisesAnExceptionIfWrongTypesAreProvided()
+    {
+        $good_parts = [ ['type' => 'binary/octet-stream',
+                         'content' => 'test' ]
+        ];
+
+        $bad_parts = [ ['type' => 'binary/octet-stream',
+                        'content' => 42 ]
+        ];
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->sendMultipartMessage([ 'sender_id' => 'user_id',
+                                               'room_id' => 42,
+                                               'parts' => $good_parts
+        ]);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->sendMultipartMessage([ 'sender_id' => 42,
+                                               'room_id' => 'room_id',
+                                               'parts' => $good_parts
+        ]);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->sendMultipartMessage([ 'sender_id' => 'user_id',
+                                               'room_id' => 'room_id',
+                                               'parts' => $bad_parts
+        ]);
+    }
+
     public function testSendMultipartMessageShouldCreateAttachmentIfLargeInlinePartProvided()
     {
         $user_id = $this->makeUser();
@@ -1032,6 +1061,90 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         ]);
         $this->assertEquals($send_msg_res['status'], 201);
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+    }
+
+    public function testFetchMultipartMessagesRaisesAnExceptionIfNoRoomIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->fetchMultipartMessages([]);
+    }
+
+    public function testFetchMultipartMessagesRaisesAnExceptionIfWrongTypesAreProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->fetchMultipartMessages([ 'room_id' => 42]);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->fetchMultipartMessages([ 'room_id' => 'correct',
+                                                 'limit' => 'incorrect']);
+    }
+
+    public function testFetchMultipartMessagesShouldReturnAResponsePayloadIfARoomIDIsProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $messages = $this->makeMessages($room_id, [ [$user_id => 'hi 1'],
+                                                    [$user_id => 'hi 2'] ]);
+
+        $get_msg_res = $this->chatkit->fetchMultipartMessages([ 'room_id' => $room_id ]);
+        $this->assertEquals(200, $get_msg_res['status']);
+        $this->assertEquals(count($messages), count($get_msg_res['body']));
+
+        $parts = [ $get_msg_res['body'][0]['parts'][0],
+                   $get_msg_res['body'][1]['parts'][0] ];
+
+        foreach ( [0, 1] as $idx) {
+            $this->assertEquals($room_id, $get_msg_res['body'][$idx]['room_id']);
+            $this->assertEquals($user_id, $get_msg_res['body'][$idx]['user_id']);
+            $this->assertEquals('text/plain', $parts[$idx]['type']);
+
+            $message_id = $get_msg_res['body'][$idx]['id'];
+            $this->assertEquals($messages[$message_id], $parts[$idx]['content']);
+        }
+    }
+
+    public function testFetchMultipartMessagesShouldReturnAResponsePayloadIfARoomIDLimitInitialIDAndDirectionAreProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $messages = $this->makeMessages($room_id, [ [$user_id => 'hi 1'],
+                                                    [$user_id => 'hi 2'],
+                                                    [$user_id => 'hi 3'],
+                                                    [$user_id => 'hi 4'],
+        ]);
+
+        $offset = 1;
+        $limit = 2;
+        // the messages returned should be this slice, note the
+        // offset+1 since the API will return the elements _after_ the
+        // marker
+        $sliced_messages = array_slice($messages, $offset+1, $limit, true);
+
+        $get_msg_res = $this->chatkit->fetchMultipartMessages([
+            'room_id' => $room_id,
+            'limit' => $limit,
+            'direction' => 'newer',
+            'initial_id' => array_keys($messages)[$offset]
+        ]);
+
+        $this->assertEquals(200, $get_msg_res['status']);
+        $this->assertEquals(count($messages), count($get_msg_res['body']));
+
+        $parts = [ $get_msg_res['body'][0]['parts'][0],
+                   $get_msg_res['body'][1]['parts'][0] ];
+
+        foreach ( [0, 1] as $idx) {
+            $this->assertEquals($room_id, $get_msg_res['body'][$idx]['room_id']);
+            $this->assertEquals($user_id, $get_msg_res['body'][$idx]['user_id']);
+            $this->assertEquals('text/plain', $parts[$idx]['type']);
+
+            $message_id = $get_msg_res['body'][$idx]['id'];
+            // use the sliced messages to make sure we didn't get one
+            // of the other messages
+            $this->assertEquals($sliced_messages[$message_id], $parts[$idx]['content']);
+        }
     }
 
     public function testGetRoomMessagesRaisesAnExceptionIfNoRoomIDIsProvided()
@@ -1781,4 +1894,26 @@ class ClientTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($room_res['status'], 201);
         return $room_res['body']['id'];
     }
+
+    protected function makeMessages($room_id, $messages) {
+        $ids = [];
+        foreach ($messages as $message) {
+            $sender_id = key($message);
+            $content = $message[$sender_id];
+            $send_msg_res = $this->chatkit->sendSimpleMessage([
+                'sender_id' => $sender_id,
+                'room_id' => $room_id,
+                'text' => $content
+            ]);
+            $this->assertEquals($send_msg_res['status'], 201);
+
+            $ids[$send_msg_res['body']['message_id']] = $content;
+        }
+        return $ids;
+    }
+};
+
+// useful for debugging tests
+function debug($var) {
+    fwrite(STDERR, print_r($var, TRUE));
 }
