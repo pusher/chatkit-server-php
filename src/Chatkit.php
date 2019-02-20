@@ -649,7 +649,8 @@ class Chatkit
 
             if (isset($part['file'])) {
                 $attachment_id = $this->uploadAttachment($token, $room_id, $part);
-                $part['file'] = $attachment_id;
+                $part['attachment'] = [ 'id' => $attachment_id ];
+                unset($part['file']);
             }
 
         }

@@ -176,6 +176,45 @@ class MessageTest extends \Base {
         }
     }
 
+   public function testFetchMultipartMessagesShouldReturnAResponsePayloadIfAnAttachmentProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $file = openssl_random_pseudo_bytes(100);
+        $file_name = 'a broken image';
+
+        $part = ['type' => 'image/png',
+                 'file' => $file,
+                 'name' => $file_name
+        ];
+
+        $send_msg_res = $this->chatkit->sendMultipartMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'parts' => [$part]
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+
+        $get_msg_res = $this->chatkit->fetchMultipartMessages([
+            'room_id' => $room_id
+        ]);
+
+        $this->assertEquals(200, $get_msg_res['status']);
+
+        // Download the file and verify contents
+        $download_url = $get_msg_res['body'][0]['parts'][0]['attachment']['download_url'];
+        $ch = curl_init($download_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        $data = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $this->assertEquals(200, $status);
+        $this->assertEquals($file, $data);
+    }
+
+
     public function testDeleteMessageRaisesAnExceptionIfNoIDIsProvided()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
