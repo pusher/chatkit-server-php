@@ -7,6 +7,7 @@ use Chatkit\Exceptions\ConfigurationException;
 use Chatkit\Exceptions\ConnectionException;
 use Chatkit\Exceptions\MissingArgumentException;
 use Chatkit\Exceptions\TypeMismatchException;
+use Chatkit\Exceptions\UploadException;
 use Firebase\JWT\JWT;
 
 class Chatkit
@@ -1097,12 +1098,13 @@ class Chatkit
     protected function uploadAttachment($token, $room_id, $file_part) {
         $body = $file_part['file'];
         $content_length = strlen($body);
+        $content_type = $file_part['type'];
 
         if ($content_length <= 0 || is_null($body)) {
             throw new MissingArgumentException('File contents size must be greater than 0');
         }
 
-        $attachment_req = [ 'content_type' => $file_part['type'],
+        $attachment_req = [ 'content_type' => $content_type,
                             'content_length' => $content_length ];
 
         foreach (['origin', 'name', 'customData'] as $field_name) {
@@ -1119,12 +1121,12 @@ class Chatkit
         ]);
 
         $url = $attachment_response['body']['upload_url'];
-        $ch = $this->createRawCurl('PUT', $url, $body);
+        $ch = $this->createRawCurl('PUT', $url, $body, $content_type);
         $upload_response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if($status !== 200) {
-            throw (new UploadException('Failed to upload attachment', $status))->setBody($response['body']);
+            throw (new UploadException('Failed to upload attachment', $status))->setBody($upload_response['body']);
         }
 
         $attachment_id = $attachment_response['body']['attachment_id'];
