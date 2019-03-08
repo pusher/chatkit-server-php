@@ -7,6 +7,7 @@ use Chatkit\Exceptions\ConfigurationException;
 use Chatkit\Exceptions\ConnectionException;
 use Chatkit\Exceptions\MissingArgumentException;
 use Chatkit\Exceptions\TypeMismatchException;
+use Chatkit\Exceptions\UploadException;
 use Firebase\JWT\JWT;
 
 class Chatkit
@@ -55,7 +56,9 @@ class Chatkit
         $this->settings['instance_locator'] = $options['instance_locator'];
         $this->settings['key'] = $options['key'];
         $this->api_settings['service_name'] = 'chatkit';
-        $this->api_settings['service_version'] = 'v2';
+        $this->api_settings['service_version'] = 'v3';
+        $this->api_settings_v2['service_name'] = 'chatkit';
+        $this->api_settings_v2['service_version'] = 'v2';
         $this->authorizer_settings['service_name'] = 'chatkit_authorizer';
         $this->authorizer_settings['service_version'] = 'v2';
         $this->cursor_settings['service_name'] = 'chatkit_cursors';
@@ -550,7 +553,7 @@ class Chatkit
 
         $room_id = rawurlencode($options['room_id']);
 
-        return $this->apiRequest([
+        return $this->apiRequestV2([
             'method' => 'GET',
             'path' => "/rooms/$room_id/messages",
             'jwt' => $this->getServerToken()['token'],
@@ -560,15 +563,14 @@ class Chatkit
 
     public function sendMessage($options)
     {
-        if (!isset($options['sender_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the user sending the message');
-        }
-        if (!isset($options['room_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the room to send the message to');
-        }
-        if (!isset($options['text'])) {
-            throw new MissingArgumentException('You must provide some text for the message');
-        }
+        verify([SENDER_ID,
+                ROOM_ID,
+                [ 'text' => [
+                    'type' => 'string',
+                    'missing_message' =>
+                    'You must provide some text for the message' ]
+                ]
+        ], $options);
 
         $body = array(
             'text' => $options['text']
@@ -594,11 +596,92 @@ class Chatkit
         $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
         $room_id = rawurlencode($options['room_id']);
 
-        return $this->apiRequest([
+        return $this->apiRequestV2([
             'method' => 'POST',
             'path' => "/rooms/$room_id/messages",
             'jwt' => $token,
             'body' => $body
+        ]);
+    }
+
+    public function sendSimpleMessage($options)
+    {
+        verify([ [ 'text' => [
+            'type' => 'string',
+            'missing_message' =>
+            'You must provide some text for the message' ] ]
+        ], $options);
+
+        $options['parts'] = [ [ 'type' => 'text/plain',
+                                'content' => $options['text'] ]
+        ];
+        unset($options['text']);
+        return $this->sendMultipartMessage($options);
+    }
+
+    public function sendMultipartMessage($options)
+    {
+        verify([SENDER_ID,
+                ROOM_ID,
+                [ 'parts' => [
+                    'type' => 'non_empty_array',
+                    'missing_message' =>
+                    'You must provide a non-empty parts array' ]
+                ]
+        ], $options);
+
+        // this assumes the token lives long enough to finish all S3 uploads
+        $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
+        $room_id = rawurlencode($options['room_id']);
+
+        foreach($options['parts'] as &$part) {
+            verify([ [ 'type' => [ 'type' => 'string',
+                                   'missing_message' => 'Each part must have a type' ] ],
+                     [ 'file' => OPTIONAL_STRING ],
+                     [ 'content' => OPTIONAL_STRING ],
+                     [ 'url' => OPTIONAL_STRING ],
+                     [ 'name' => OPTIONAL_STRING ],
+                     [ 'customData' => [ 'type' => 'json', 'optional' => true ] ]
+            ], $part);
+
+            if (!isset($part['content']) && !isset($part['url']) && !isset($part['file'])) {
+                throw new MissingArgumentException('Each part must define either file, content or url');
+            }
+
+            if (isset($part['file'])) {
+                $attachment_id = $this->uploadAttachment($token, $room_id, $part);
+                $part['attachment'] = [ 'id' => $attachment_id ];
+                unset($part['file']);
+            }
+
+        }
+
+        return $this->apiRequest([
+            'method' => 'POST',
+            'path' => "/rooms/$room_id/messages",
+            'jwt' => $token,
+            'body' => [ 'parts' => $options['parts'] ]
+        ]);
+    }
+
+    public function fetchMultipartMessages($options)
+    {
+        verify([ROOM_ID,
+                [ 'limit' => OPTIONAL_INT,
+                  'direction' => OPTIONAL_STRING,
+                  'initial_id' => OPTIONAL_STRING,
+                ]
+        ], $options);
+
+        $optional_fields = ['limit', 'direction', 'initial_id'];
+        $query_params = $this->getOptionalFields($optional_fields, $options);
+        $room_id = rawurlencode($options['room_id']);
+
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => "/rooms/$room_id/messages",
+            'jwt' => $this->getServerToken()['token'],
+            'query' => $query_params
         ]);
     }
 
@@ -827,6 +910,12 @@ class Chatkit
         return $this->makeRequest($this->api_settings, $options);
     }
 
+    // keep v2 for backwards compatibility
+    public function apiRequestV2($options)
+    {
+        return $this->makeRequest($this->api_settings_v2, $options);
+    }
+
     public function authorizerRequest($options)
     {
         return $this->makeRequest($this->authorizer_settings, $options);
@@ -1006,8 +1095,55 @@ class Chatkit
         ]);
     }
 
+    protected function uploadAttachment($token, $room_id, $file_part) {
+        $body = $file_part['file'];
+        $content_length = strlen($body);
+        $content_type = $file_part['type'];
+
+        if ($content_length <= 0 || is_null($body)) {
+            throw new MissingArgumentException('File contents size must be greater than 0');
+        }
+
+        $attachment_req = [ 'content_type' => $content_type,
+                            'content_length' => $content_length ];
+
+        foreach (['origin', 'name', 'customData'] as $field_name) {
+            if (isset($file_part[$field_name])) {
+                $attachment_req[$field_name] = $file_part[$field_name];
+            }
+        }
+
+        $attachment_response =  $this->apiRequest([
+            'method' => 'POST',
+            'path' => "/rooms/$room_id/attachments",
+            'jwt' => $token,
+            'body' => $attachment_req
+        ]);
+
+        $url = $attachment_response['body']['upload_url'];
+        $ch = $this->createRawCurl('PUT', $url, $body, $content_type);
+        $upload_response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if($status !== 200) {
+            throw (new UploadException('Failed to upload attachment', $status))->setBody($upload_response['body']);
+        }
+
+        $attachment_id = $attachment_response['body']['attachment_id'];
+        return $attachment_id;
+    }
+
+    protected function getOptionalFields($field_names, $options) {
+        $fields = [];
+        foreach ($field_names as $field_name) {
+            if(isset($options[$field_name])) {
+                $fields[$field_name] = $options[$field_name];
+            }
+        }
+    }
+
     /**
-     * Utility function used to create the curl object with common settings.
+     * Utility function used to create the curl object setup to interact with the Pusher API
      */
     protected function createCurl($service_settings, $path, $jwt, $request_method, $body = null, $query_params = array())
     {
@@ -1027,6 +1163,14 @@ class Chatkit
 
         $this->log('INFO: createCurl( '.$final_url.' )');
 
+        return $this->createRawCurl($request_method, $final_url, $body, null, $jwt, true);
+    }
+
+    /**
+     * Utility function used to create the curl object with common settings.
+     */
+    protected function createRawCurl($request_method, $url, $body = null, $content_type = null, $jwt = null, $encode_json = false)
+    {
         // Create or reuse existing curl handle
         if (null === $this->ch) {
             $this->ch = curl_init();
@@ -1043,20 +1187,29 @@ class Chatkit
             curl_reset($ch);
         }
 
+        $headers = array();
+
+        if(!is_null($jwt)) {
+            array_push($headers, 'Authorization: Bearer '.$jwt);
+        }
+        if(!is_null($content_type)) {
+            array_push($headers, 'Content-Type: '.$content_type);
+        }
         // Set cURL opts and execute request
-        curl_setopt($ch, CURLOPT_URL, $final_url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-            'Authorization: Bearer '.$jwt
-        ));
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->settings['timeout']);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $request_method);
 
         if (!is_null($body)) {
-            $json_encoded_body = json_encode($body);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $json_encoded_body);
+            if ($encode_json) {
+                $body = json_encode($body, JSON_ERROR_UTF8);
+                array_push($headers, 'Content-Type: application/json');
+            }
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            array_push($headers, 'Content-Length: '.strlen($body));
         }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Set custom curl options
         if (!empty($this->settings['curl_options'])) {
@@ -1128,5 +1281,54 @@ class Chatkit
 
         $this->log('INFO: execCurl response: '.print_r($response, true));
         return $response;
+    }
+
+};
+
+const OPTIONAL_STRING = [ 'type' => 'string', "optional" => true ];
+const OPTIONAL_INT = [ 'type' => 'int', "optional" => true ];
+
+const ROOM_ID = [ 'room_id' =>
+                  [ 'type' => 'string',
+                    'missing_message' =>
+                    'You must provide the ID of the room'
+                  ]
+];
+const SENDER_ID = [ 'sender_id' =>
+                    [ 'type' => 'string',
+                      'missing_message' =>
+                      'You must provide the ID of the user sending the message'
+                    ]
+];
+
+function verify($fields, $options) {
+    foreach ($fields as $field) {
+        $name = key($field);
+        $rules = $field[$name];
+
+        if (!isset($options[$name]) && !isset($rules['optional'])) {
+            throw new MissingArgumentException($rules['missing_message']);
+        } elseif (isset($options[$name])) {
+            switch ($rules['type']) {
+            case 'string':
+                if (!is_string($options[$name])) {
+                    throw new TypeMismatchException($options[$name]." must be of type string");
+                }
+                break;
+            case 'int':
+                if (!is_int($options[$name]) || $options[$name] < 0) {
+                    throw new TypeMismatchException($options[$name]." must be a positive int");
+                }
+                break;
+            case 'non_empty_array':
+                if (!is_array($options[$name]) || empty($options[$name])) {
+                    throw new TypeMismatchException($options[$name]." must be a non-empty array");
+                }
+                break;
+            default:
+                break;
+
+            }
+        }
     }
 }
