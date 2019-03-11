@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.2.0...HEAD)
 
+### Fixed
+
+- `fetchMultipartMessages` now uses passed query params
+
 ## [1.2.0](https://github.com/pusher/chatkit-server-php/compare/1.1.0...1.2.0) - 2019-03-08
 
 ### Added

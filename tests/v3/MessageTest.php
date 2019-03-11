@@ -159,7 +159,7 @@ class MessageTest extends \Base {
         ]);
 
         $this->assertEquals(200, $get_msg_res['status']);
-        $this->assertEquals(count($messages), count($get_msg_res['body']));
+        $this->assertEquals(count($sliced_messages), count($get_msg_res['body']));
 
         $parts = [ $get_msg_res['body'][0]['parts'][0],
                    $get_msg_res['body'][1]['parts'][0] ];
@@ -174,6 +174,46 @@ class MessageTest extends \Base {
             // of the other messages
             $this->assertEquals($sliced_messages[$message_id], $parts[$idx]['content']);
         }
+    }
+
+    public function testFetchMultipartMessagesShouldReturnAResponsePayloadIfARoomIDAndNewerDirectionAreProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $messages = $this->makeMessages($room_id, [ [$user_id => 'hi first'],
+                                                    [$user_id => 'hi last'],
+        ]);
+
+        $get_msg_res = $this->chatkit->fetchMultipartMessages([
+            'room_id' => $room_id,
+            'direction' => 'newer',
+        ]);
+
+        $this->assertEquals(200, $get_msg_res['status']);
+        $this->assertEquals(count($messages), count($get_msg_res['body']));
+        $this->assertEquals(array_values($messages)[0], $get_msg_res['body'][0]['parts'][0]['content']);
+        $this->assertEquals(array_values($messages)[1], $get_msg_res['body'][1]['parts'][0]['content']);
+    }
+
+    public function testFetchMultipartMessagesShouldReturnAResponsePayloadIfARoomIDAndOlderDirectionAreProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $messages = $this->makeMessages($room_id, [ [$user_id => 'hi first'],
+                                                    [$user_id => 'hi last'],
+        ]);
+
+        $get_msg_res = $this->chatkit->fetchMultipartMessages([
+            'room_id' => $room_id,
+            'direction' => 'older',
+        ]);
+
+        $this->assertEquals(200, $get_msg_res['status']);
+        $this->assertEquals(count($messages), count($get_msg_res['body']));
+        $this->assertEquals(array_values($messages)[0], $get_msg_res['body'][1]['parts'][0]['content']);
+        $this->assertEquals(array_values($messages)[1], $get_msg_res['body'][0]['parts'][0]['content']);
     }
 
    public function testFetchMultipartMessagesShouldReturnAResponsePayloadIfAnAttachmentProvided()
