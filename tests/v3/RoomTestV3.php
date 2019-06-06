@@ -1,6 +1,6 @@
 <?php
 
-class RoomTest extends \Base {
+class RoomTestV3 extends \Base {
 
     public function testCreateRoomShouldRaiseAnExcepctionIfNoNameIsProvided()
     {
