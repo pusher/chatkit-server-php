@@ -63,6 +63,8 @@ class Chatkit
         $this->authorizer_settings['service_version'] = 'v2';
         $this->cursor_settings['service_name'] = 'chatkit_cursors';
         $this->cursor_settings['service_version'] = 'v2';
+        $this->scheduler_settings['service_name'] = 'chatkit_scheduler';
+        $this->scheduler_settings['service_version'] = 'v1';
 
         foreach ($options as $key => $value) {
             // only set if valid setting/option
@@ -280,6 +282,36 @@ class Chatkit
         ]);
     }
 
+    public function asyncDeleteUser($options)
+    {
+        if (!isset($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the user you want to delete');
+        }
+
+        $user_id = rawurlencode($options['id']);
+
+        return $this->schedulerRequest([
+            'method' => 'PUT',
+            'path' => "/users/$user_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    public function getDeleteStatus($options)
+    {
+        if (!isset($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the job to query status of');
+        }
+
+        $job_id = rawurlencode($options['id']);
+
+        return $this->schedulerRequest([
+            'method' => 'GET',
+            'path' => "/status/$job_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
     public function getUser($options)
     {
         if (!isset($options['id'])) {
@@ -412,9 +444,6 @@ class Chatkit
         ]);
     }
 
-    /**
-     * Deletes a room
-     */
     public function deleteRoom($options)
     {
         if (!isset($options['id'])) {
@@ -425,6 +454,21 @@ class Chatkit
 
         return $this->apiRequest([
             'method' => 'DELETE',
+            'path' => "/rooms/$room_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
+    public function asyncDeleteRoom($options)
+    {
+        if (!isset($options['id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room to delete');
+        }
+
+        $room_id = rawurlencode($options['id']);
+
+        return $this->schedulerRequest([
+            'method' => 'PUT',
             'path' => "/rooms/$room_id",
             'jwt' => $this->getServerToken()['token']
         ]);
@@ -924,6 +968,11 @@ class Chatkit
     public function cursorsRequest($options)
     {
         return $this->makeRequest($this->cursor_settings, $options);
+    }
+
+    public function schedulerRequest($options)
+    {
+        return $this->makeRequest($this->scheduler_settings, $options);
     }
 
     protected function makeRequest($instance_settings, $options)
