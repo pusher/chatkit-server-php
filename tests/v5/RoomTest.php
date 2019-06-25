@@ -558,4 +558,72 @@ class RoomTest extends \Base {
         $this->assertFalse($get_res['body']['private']);
         $this->assertEmpty(array_diff($get_res['body']['member_user_ids'], [$user_id, $user_id2]));
     }
+
+    public function testRoomHasUnreadCount()
+    {
+        $bob_id = $this->makeUser();
+        $alice_id = $this->makeUser();
+
+        $room_id = $this->makeRoom($bob_id, [$alice_id]);
+             
+        $send_msg1_res = $this->chatkit->sendSimpleMessage([
+            'sender_id' => $bob_id,
+            'room_id' => $room_id,
+            'text' => 'testing'
+        ]);
+        $msg1_id = $send_msg1_res['body']['message_id'];
+        
+        // cursor is unset
+        // message count is 1
+        // unread count is 1
+        $get_res = $this->chatkit->getUserRooms([
+            'id' => $bob_id
+        ]);
+        $this->assertEquals(200, $get_res['status']);
+        $this->assertEquals(1, $get_res['body'][0]['unread_count']);
+        $this->assertArrayHasKey('last_message_at', $get_res['body'][0]);
+
+        $set_cursor_res = $this->chatkit->setReadCursor([
+            'user_id' => $bob_id,
+            'room_id' => $room_id,
+            'position' => $msg1_id
+        ]);
+
+        // cursor is at msg1
+        // message count is 1
+        // unread count is 0
+        $get_res = $this->chatkit->getUserRooms([
+            'id' => $bob_id
+        ]);
+        $this->assertEquals(200, $get_res['status']);
+        $this->assertEquals($set_cursor_res['status'], 201);
+        $this->assertEquals(0, $get_res['body'][0]['unread_count']);
+        
+        $send_msg_res = $this->chatkit->sendSimpleMessage([
+            'sender_id' => $bob_id,
+            'room_id' => $room_id,
+            'text' => 'testing'
+        ]);
+
+        // cursor is at msg1
+        // message count is 2
+        // unread count is 1
+        $get_res = $this->chatkit->getUserRooms([
+            'id' => $bob_id
+        ]);
+        $this->assertEquals(200, $get_res['status']);
+        $this->assertEquals($set_cursor_res['status'], 201);
+        $this->assertEquals(1, $get_res['body'][0]['unread_count']);
+
+        // alice's cursor is unset
+        // message count is 2
+        // unread count is 2
+        $get_res = $this->chatkit->getUserRooms([
+            'id' => $alice_id
+        ]);
+        $this->assertEquals(200, $get_res['status']);
+        $this->assertEquals($set_cursor_res['status'], 201);
+        $this->assertEquals(2, $get_res['body'][0]['unread_count']);
+        
+    }
 }

@@ -45,13 +45,23 @@ class Base extends \PHPUnit_Framework_TestCase {
         return $user_id;
     }
 
-    protected function makeRoom($creator) {
+    protected function makeRoom($creator, $extra_members = []) {
         $room_res = $this->chatkit->createRoom([
             'creator_id' => $creator,
             'name' => 'my room'
         ]);
         $this->assertEquals($room_res['status'], 201);
-        return $room_res['body']['id'];
+        $room_id = $room_res['body']['id'];
+
+        if (sizeof($extra_members) > 0) {
+            $add_res = $this->chatkit->addUsersToRoom([
+                'room_id' => $room_id,
+                'user_ids' => $extra_members
+            ]);
+            $this->assertEquals(204, $add_res['status']);
+        }
+
+        return $room_id;
     }
 
     protected function makeMessages($room_id, $messages) {
