@@ -56,7 +56,7 @@ class Chatkit
         $this->settings['instance_locator'] = $options['instance_locator'];
         $this->settings['key'] = $options['key'];
         $this->api_settings['service_name'] = 'chatkit';
-        $this->api_settings['service_version'] = 'v4';
+        $this->api_settings['service_version'] = 'v6';
         $this->api_settings_v2['service_name'] = 'chatkit';
         $this->api_settings_v2['service_version'] = 'v2';
         $this->authorizer_settings['service_name'] = 'chatkit_authorizer';
@@ -397,6 +397,9 @@ class Chatkit
             'name' => $options['name'],
             'private' => false
         ];
+        if (isset($options['id'])) {
+            $body['id'] = $options['id'];
+        }
         if (isset($options['private'])) {
             $body['private'] = $options['private'];
         }
@@ -731,15 +734,20 @@ class Chatkit
 
     public function deleteMessage($options)
     {
-        if (!isset($options['id'])) {
+        if (!isset($options['message_id'])) {
             throw new MissingArgumentException('You must provide the ID of the message to delete');
         }
 
-        $message_id = $options['id'];
+        if (!isset($options['room_id'])) {
+            throw new MissingArgumentException('You must provide the ID of the room to which the message belongs');
+        }
+
+        $message_id = $options['message_id'];
+        $room_id = $options['room_id'];
 
         return $this->apiRequest([
             'method' => 'DELETE',
-            'path' => "/messages/$message_id",
+            'path' => "/rooms/$room_id/messages/$message_id",
             'jwt' => $this->getServerToken()['token']
         ]);
     }

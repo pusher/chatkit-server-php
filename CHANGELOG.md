@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.4.0...HEAD)
 
+### Added
+
+- `createRoom` now accepts an optional `id` parameter that is then uniquely used to identify the
+  room. If one isn't provided, the server will generate an ID instead.
+
+### Changed
+
+- The `deleteMessage` method now *requires* a room ID parameter, `room_id` and the `id`
+  parameter has been renamed to `message_id` to avoid any ambiguity.
+
 [1.4.0](https://github.com/pusher/chatkit-server-ruby/compare/1.3.0...1.4.0) - 2019-06-24
 
 ### Changed
