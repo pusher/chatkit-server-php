@@ -80,6 +80,18 @@ class Base extends \PHPUnit_Framework_TestCase {
         }
         return $ids;
     }
+
+    protected function payloadContainsValueForKey($payload, $key, $value)
+    {
+        foreach ($payload as $p) {
+            foreach ($p as $k => $v) {
+                if ($key === $k && $value === $v) {
+                    $this->assertEquals($value, $v);
+                    return;
+                }
+            }
+        }
+    }
 };
 
 // useful for debugging tests
