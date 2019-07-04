@@ -172,10 +172,10 @@ class UserTest extends \Base {
 
         $get_res = $this->chatkit->getUsers();
         $this->assertEquals($get_res['status'], 200);
-        $this->assertEquals($get_res['body'][0]['id'], $user_id);
-        $this->assertEquals($get_res['body'][0]['name'], 'Ham');
-        $this->assertEquals($get_res['body'][1]['id'], $user_id2);
-        $this->assertEquals($get_res['body'][1]['name'], 'Ham2');
+        $this->payloadContainsValueForKey($get_res['body'], 'id', $user_id);
+        $this->payloadContainsValueForKey($get_res['body'], 'name', 'Ham');
+        $this->payloadContainsValueForKey($get_res['body'], 'id', $user_id2);
+        $this->payloadContainsValueForKey($get_res['body'], 'name', 'Ham2');
     }
 
     public function testGetUsersShouldReturnAResponsePayloadIfALimitIsProvided()

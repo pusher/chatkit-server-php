@@ -233,7 +233,10 @@ class MessageTest extends \Base {
         ]);
         $this->assertEquals($send_msg_res['status'], 201);
 
-        $delete_msg_res = $this->chatkit->deleteMessage([ 'id' => $send_msg_res['body']['message_id'] ]);
+        $delete_msg_res = $this->chatkit->deleteMessage([
+            'message_id' => $send_msg_res['body']['message_id'],
+            'room_id' => $room_id
+        ]);
         $this->assertEquals($delete_msg_res['status'], 204);
         $this->assertEquals($delete_msg_res['body'], null);
     }
