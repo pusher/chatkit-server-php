@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.4.0...HEAD)
+## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.5.0...HEAD)
+
+## [1.5.0](https://github.com/pusher/chatkit-server-ruby/compare/1.4.0...1.5.0) - 2019-07-04
 
 ### Added
 
@@ -16,7 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The `deleteMessage` method now *requires* a room ID parameter, `room_id` and the `id`
   parameter has been renamed to `message_id` to avoid any ambiguity.
 
-[1.4.0](https://github.com/pusher/chatkit-server-ruby/compare/1.3.0...1.4.0) - 2019-06-24
+## [1.4.0](https://github.com/pusher/chatkit-server-ruby/compare/1.3.0...1.4.0) - 2019-06-24
 
 ### Changed
 
