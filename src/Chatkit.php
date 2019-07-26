@@ -406,8 +406,11 @@ class Chatkit
         if (isset($options['user_ids'])) {
             $body['user_ids'] = $options['user_ids'];
         }
+        if (isset($options['push_notification_title_override'])) {
+            $body['push_notification_title_override'] = $options['push_notification_title_override'];
+        }
         if (isset($options['custom_data'])) {
-        	$body['custom_data'] = $options['custom_data'];
+            $body['custom_data'] = $options['custom_data'];
         }
 
         $token = $this->getServerToken([ 'user_id' => $options['creator_id'] ])['token'];
@@ -433,8 +436,11 @@ class Chatkit
         if (isset($options['name'])) {
             $body['name'] = $options['name'];
         }
+        if (isset($options['push_notification_title_override'])) {
+            $body['push_notification_title_override'] = $options['push_notification_title_override'];
+        }
         if (isset($options['custom_data'])) {
-        	$body['custom_data'] = $options['custom_data'];
+            $body['custom_data'] = $options['custom_data'];
         }
 
         $room_id = rawurlencode($options['id']);
