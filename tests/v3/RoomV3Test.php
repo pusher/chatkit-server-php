@@ -1,6 +1,6 @@
 <?php
 
-class RoomTestV3 extends \Base {
+class RoomV3Test extends \Base {
 
     public function testCreateRoomShouldRaiseAnExcepctionIfNoNameIsProvided()
     {
@@ -198,14 +198,25 @@ class RoomTestV3 extends \Base {
         $this->assertEquals($room_res2['status'], 201);
 
         $get_rooms_res = $this->chatkit->getRooms();
+        $rooms = $get_rooms_res['body'];
+
         $this->assertEquals($get_rooms_res['status'], 200);
-        $this->assertEquals(count($get_rooms_res['body']), 2);
-        $this->assertEquals($get_rooms_res['body'][0]['id'], $room_res1['body']['id']);
-        $this->assertEquals($get_rooms_res['body'][0]['name'], 'my room');
-        $this->assertFalse($get_rooms_res['body'][0]['private']);
-        $this->assertEquals($get_rooms_res['body'][1]['id'], $room_res2['body']['id']);
-        $this->assertEquals($get_rooms_res['body'][1]['name'], 'my second room');
-        $this->assertFalse($get_rooms_res['body'][1]['private']);
+        $this->assertEquals(count($rooms), 2);
+
+
+        $roomID1 = $room_res1['body']['id'];
+        $room1 = $this->extractRoomFromArray($roomID1, $rooms);
+
+        $roomID2 = $room_res2['body']['id'];
+        $room2 = $this->extractRoomFromArray($roomID2, $rooms);
+
+        $this->assertNotNull($room1);
+        $this->assertEquals($room1['name'], 'my room');
+        $this->assertFalse($room1['private']);
+
+        $this->assertNotNull($room2);
+        $this->assertEquals($room2['name'], 'my second room');
+        $this->assertFalse($room2['private']);
     }
 
     public function testGetRoomsShouldReturnAResponsePayloadIfIncludePrivateIsSpecified()
@@ -223,29 +234,40 @@ class RoomTestV3 extends \Base {
             'private' => true
         ]);
         $this->assertEquals($room_res1['status'], 201);
+        $roomID1 = $room_res1['body']['id'];
 
         $room_res2 = $this->chatkit->createRoom([
             'creator_id' => $user_id,
             'name' => 'my second room'
         ]);
         $this->assertEquals($room_res2['status'], 201);
+        $roomID2 = $room_res2['body']['id'];
 
         $get_rooms_res1 = $this->chatkit->getRooms();
+        $rooms1 = $get_rooms_res1['body'];
         $this->assertEquals($get_rooms_res1['status'], 200);
-        $this->assertEquals(count($get_rooms_res1['body']), 1);
-        $this->assertEquals($get_rooms_res1['body'][0]['id'], $room_res2['body']['id']);
-        $this->assertEquals($get_rooms_res1['body'][0]['name'], 'my second room');
-        $this->assertFalse($get_rooms_res1['body'][0]['private']);
+        $this->assertEquals(count($rooms1), 1);
+
+        $room2 = $this->extractRoomFromArray($roomID2, $rooms1);
+        $this->assertNotNull($room2);
+        $this->assertEquals($room2['name'], 'my second room');
+        $this->assertFalse($room2['private']);
 
         $get_rooms_res2 = $this->chatkit->getRooms([ 'include_private' => true ]);
+        $rooms2 = $get_rooms_res2['body'];
         $this->assertEquals($get_rooms_res2['status'], 200);
-        $this->assertEquals(count($get_rooms_res2['body']), 2);
-        $this->assertEquals($get_rooms_res2['body'][0]['id'], $room_res1['body']['id']);
-        $this->assertEquals($get_rooms_res2['body'][0]['name'], 'my room');
-        $this->assertTrue($get_rooms_res2['body'][0]['private']);
-        $this->assertEquals($get_rooms_res2['body'][1]['id'], $room_res2['body']['id']);
-        $this->assertEquals($get_rooms_res2['body'][1]['name'], 'my second room');
-        $this->assertFalse($get_rooms_res2['body'][1]['private']);
+        $this->assertEquals(count($rooms2), 2);
+
+        $room1 = $this->extractRoomFromArray($roomID1, $rooms2);
+        $room2 = $this->extractRoomFromArray($roomID2, $rooms2);
+
+        $this->assertNotNull($room1);
+        $this->assertEquals($room1['name'], 'my room');
+        $this->assertTrue($room1['private']);
+
+        $this->assertNotNull($room2);
+        $this->assertEquals($room2['name'], 'my second room');
+        $this->assertFalse($room2['private']);
     }
 
     public function testGetRoomsShouldReturnAResponsePayloadIfIncludedPrivateAndFromIDAreSpecified()
@@ -270,26 +292,26 @@ class RoomTestV3 extends \Base {
         ]);
         $this->assertEquals($room_res2['status'], 201);
 
-        $get_rooms_res1 = $this->chatkit->getRooms();
+        $get_rooms_res1 = $this->chatkit->getRooms([
+            'include_private' => true,
+        ]);
         $this->assertEquals($get_rooms_res1['status'], 200);
-        $this->assertEquals(count($get_rooms_res1['body']), 1);
-        $this->assertEquals($get_rooms_res1['body'][0]['id'], $room_res2['body']['id']);
-        $this->assertEquals($get_rooms_res1['body'][0]['name'], 'my second room');
-        $this->assertFalse($get_rooms_res1['body'][0]['private']);
+        $this->assertEquals(count($get_rooms_res1['body']), 2);
+
+        $firstRoomID = $get_rooms_res1['body'][0]['id'];
+        $secondRoomID = $get_rooms_res1['body'][1]['id'];
 
         $get_rooms_res2 = $this->chatkit->getRooms([
             'include_private' => true,
-            'from_id' => $room_res1['body']['id']
+            'from_id' => $firstRoomID
         ]);
         $this->assertEquals($get_rooms_res2['status'], 200);
         $this->assertEquals(count($get_rooms_res2['body']), 1);
-        $this->assertEquals($get_rooms_res2['body'][0]['id'], $room_res2['body']['id']);
-        $this->assertEquals($get_rooms_res2['body'][0]['name'], 'my second room');
-        $this->assertFalse($get_rooms_res2['body'][0]['private']);
+        $this->assertEquals($get_rooms_res2['body'][0]['id'], $secondRoomID);
 
         $get_rooms_res3 = $this->chatkit->getRooms([
             'include_private' => true,
-            'from_id' => $room_res2['body']['id']
+            'from_id' => $secondRoomID
         ]);
         $this->assertEquals($get_rooms_res3['status'], 200);
         $this->assertEquals(count($get_rooms_res3['body']), 0);

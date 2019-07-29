@@ -34,6 +34,16 @@ class Base extends \PHPUnit_Framework_TestCase {
         return $value['name'];
     }
 
+    protected function extractRoomFromArray($roomID, $rooms) {
+        foreach($rooms as $room) {
+            if ($room['id'] == $roomID) {
+                return $room;
+            }
+        }
+
+        return null;
+    }
+
     protected function makeUser() {
         $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
         $user_res = $this->chatkit->createUser([
