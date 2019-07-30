@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.5.0...HEAD)
 
+### Added
+
+-   Support for `push_notification_title_override` to `createRoom` and `updateRoom`
+
 ## [1.5.0](https://github.com/pusher/chatkit-server-ruby/compare/1.4.0...1.5.0) - 2019-07-04
 
 ### Added
