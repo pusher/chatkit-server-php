@@ -1,6 +1,6 @@
 <?php
 
-class UserTestV3 extends \Base {
+class UserV3Test extends \Base {
 
     public function testCreateUserShouldRaiseAnExceptionIfNoIDIsProvided()
     {
