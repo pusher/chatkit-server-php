@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `createRoom` now accepts an optional `id` parameter that is then uniquely used to identify the
   room. If one isn't provided, the server will generate an ID instead.
 
-### Changed
+### Changed
 
 - The `deleteMessage` method now *requires* a room ID parameter, `room_id` and the `id`
   parameter has been renamed to `message_id` to avoid any ambiguity.
