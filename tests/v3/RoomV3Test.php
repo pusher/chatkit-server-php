@@ -205,10 +205,10 @@ class RoomV3Test extends \Base {
 
 
         $roomID1 = $room_res1['body']['id'];
-        $room1 = $this->extractRoomFromArray($roomID1, $rooms);
+        $room1 = $this->extractFromArrayByID($roomID1, $rooms);
 
         $roomID2 = $room_res2['body']['id'];
-        $room2 = $this->extractRoomFromArray($roomID2, $rooms);
+        $room2 = $this->extractFromArrayByID($roomID2, $rooms);
 
         $this->assertNotNull($room1);
         $this->assertEquals($room1['name'], 'my room');
@@ -248,7 +248,7 @@ class RoomV3Test extends \Base {
         $this->assertEquals($get_rooms_res1['status'], 200);
         $this->assertEquals(count($rooms1), 1);
 
-        $room2 = $this->extractRoomFromArray($roomID2, $rooms1);
+        $room2 = $this->extractFromArrayByID($roomID2, $rooms1);
         $this->assertNotNull($room2);
         $this->assertEquals($room2['name'], 'my second room');
         $this->assertFalse($room2['private']);
@@ -258,8 +258,8 @@ class RoomV3Test extends \Base {
         $this->assertEquals($get_rooms_res2['status'], 200);
         $this->assertEquals(count($rooms2), 2);
 
-        $room1 = $this->extractRoomFromArray($roomID1, $rooms2);
-        $room2 = $this->extractRoomFromArray($roomID2, $rooms2);
+        $room1 = $this->extractFromArrayByID($roomID1, $rooms2);
+        $room2 = $this->extractFromArrayByID($roomID2, $rooms2);
 
         $this->assertNotNull($room1);
         $this->assertEquals($room1['name'], 'my room');

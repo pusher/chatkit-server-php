@@ -34,13 +34,12 @@ class Base extends \PHPUnit_Framework_TestCase {
         return $value['name'];
     }
 
-    protected function extractRoomFromArray($roomID, $rooms) {
-        foreach($rooms as $room) {
-            if ($room['id'] == $roomID) {
-                return $room;
+    protected function extractFromArrayByID($ID, $array) {
+        foreach($array as $elem) {
+            if ($elem['id'] == $ID) {
+                return $elem;
             }
         }
-
         return null;
     }
 
