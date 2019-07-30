@@ -436,7 +436,7 @@ class Chatkit
         if (isset($options['name'])) {
             $body['name'] = $options['name'];
         }
-        if (isset($options['push_notification_title_override'])) {
+        if (array_key_exists('push_notification_title_override', $options)) { // We want to accept null
             $body['push_notification_title_override'] = $options['push_notification_title_override'];
         }
         if (isset($options['custom_data'])) {
