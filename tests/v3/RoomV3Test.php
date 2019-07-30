@@ -78,6 +78,25 @@ class RoomV3Test extends \Base {
         $this->assertEquals($room_res['body']['custom_data'], array('foo' => 'bar'));
     }
 
+    public function testCreateRoomShouldReturnAResponsePayloadIfACreatorIDNameAndPushNotificationTitleOverrideAreProvided() {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room',
+            'push_notification_title_override' => 'something'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+        $this->assertArrayHasKey('id', $room_res['body']);
+        $this->assertEquals($room_res['body']['name'], 'my room');
+        $this->assertEquals($room_res['body']['push_notification_title_override'], 'something');
+    }
+
     public function testUpdateRoomShouldRaiseAnExceptionIfNoIDIsProvided()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
@@ -104,6 +123,7 @@ class RoomV3Test extends \Base {
             'id' => $room_res['body']['id'],
             'name' => 'new name',
             'private' => true,
+            'push_notification_title_override' => 'something',
             'custom_data' => array('foo' => 'baz')
         ]);
         $this->assertEquals($update_res['status'], 204);
@@ -115,7 +135,45 @@ class RoomV3Test extends \Base {
         $this->assertEquals($get_res['status'], 200);
         $this->assertEquals($get_res['body']['name'], 'new name');
         $this->assertEquals($get_res['body']['private'], true);
+        $this->assertEquals($get_res['body']['push_notification_title_override'], 'something');
         $this->assertEquals($get_res['body']['custom_data'], array('foo' => 'baz'));
+    }
+
+    public function testShouldBePossibleToSetPNTitleOverrideToNull()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room',
+            'push_notification_title_override' => 'something'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+        $this->assertTrue(
+            array_key_exists('push_notification_title_override', $room_res['body']),
+            'Room should contain push_notification_title_override on creation'
+        );
+
+        $update_res = $this->chatkit->updateRoom([
+            'id' => $room_res['body']['id'],
+            'push_notification_title_override' => null,
+        ]);
+        $this->assertEquals($update_res['status'], 204);
+        $this->assertEquals($update_res['body'], null);
+
+        $get_res = $this->chatkit->getRoom([
+            'id' => $room_res['body']['id']
+        ]);
+        $this->assertEquals($get_res['status'], 200);
+        $this->assertFalse(
+            array_key_exists('push_notification_title_override', $get_res['body']),
+            'Room should NOT contain push_notification_title_override after update'
+        );
     }
 
     public function testDeleteRoomShouldRaiseAnExceptionIfNoIDIsProvided()
