@@ -1203,6 +1203,8 @@ class Chatkit
                 $fields[$field_name] = $options[$field_name];
             }
         }
+
+        return $fields;
     }
 
     /**
