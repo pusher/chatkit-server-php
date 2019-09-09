@@ -159,7 +159,7 @@ class MessageTest extends \Base {
         ]);
 
         $this->assertEquals(200, $get_msg_res['status']);
-        $this->assertEquals(count($messages), count($get_msg_res['body']));
+        $this->assertEquals(count($get_msg_res['body']), 2);
 
         $parts = [ $get_msg_res['body'][0]['parts'][0],
                    $get_msg_res['body'][1]['parts'][0] ];
