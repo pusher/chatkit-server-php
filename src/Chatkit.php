@@ -21,7 +21,6 @@ class Chatkit
     );
 
     protected $api_settings_v2 = array();
-
     protected $scheduler_settings = array();
 
     protected $logger = null;
@@ -169,6 +168,7 @@ class Chatkit
 
     /**
      * Set a logger to be informed of internal log messages.
+     * @param $logger
      * @return void
      */
     public function setLogger($logger)
@@ -211,6 +211,8 @@ class Chatkit
     // User API
 
     /**
+     * Create a User
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -254,6 +256,8 @@ class Chatkit
     }
 
     /**
+     * Create multiple users
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -278,6 +282,8 @@ class Chatkit
     }
 
     /**
+     * Update a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -319,6 +325,8 @@ class Chatkit
     }
 
     /**
+     * Delete a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -342,6 +350,8 @@ class Chatkit
     }
 
     /**
+     * Asynchronously delete a user.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -365,6 +375,8 @@ class Chatkit
     }
 
     /**
+     * Check the status of a user being asynchronously deleted.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -388,6 +400,8 @@ class Chatkit
     }
 
     /**
+     * Get a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -443,6 +457,8 @@ class Chatkit
     }
 
     /**
+     * Get users by their Chatkit id.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -526,6 +542,8 @@ class Chatkit
     }
 
     /**
+     * Updates a Room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -564,6 +582,8 @@ class Chatkit
     }
 
     /**
+     * Delete a room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -587,6 +607,8 @@ class Chatkit
     }
 
     /**
+     * Asynchronously delete a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -610,6 +632,8 @@ class Chatkit
     }
 
     /**
+     * Get a Room with a provided ID
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -633,6 +657,8 @@ class Chatkit
     }
 
     /**
+     * Get rooms by ID, paged 100 at a time.
+     *
      * @param array $options
      * @return array
      * @throws ConfigurationException
@@ -693,6 +719,8 @@ class Chatkit
     }
 
     /**
+     * Add a set of users to a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -720,6 +748,8 @@ class Chatkit
     }
 
     /**
+     * Remove a set of users from a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -791,6 +821,8 @@ class Chatkit
     }
 
     /**
+     * Send a message to a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -842,6 +874,8 @@ class Chatkit
     }
 
     /**
+     * Send a simple text based message to a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -865,6 +899,7 @@ class Chatkit
     }
 
     /**
+     * Send a multi-part message to a room.
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -918,6 +953,8 @@ class Chatkit
     }
 
     /**
+     * Fetch a Multipart Messages
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -947,6 +984,8 @@ class Chatkit
     }
 
     /**
+     * Delete a Message from a room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -977,6 +1016,8 @@ class Chatkit
     // Roles and permissions API
 
     /**
+     * Create a global role
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -991,6 +1032,8 @@ class Chatkit
     }
 
     /**
+     * Create a role for a room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -1005,6 +1048,8 @@ class Chatkit
     }
 
     /**
+     * Delete a gloabl role
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -1019,6 +1064,8 @@ class Chatkit
     }
 
     /**
+     * Delete a role for a room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -1033,6 +1080,8 @@ class Chatkit
     }
 
     /**
+     * Assign a global role to a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -1046,6 +1095,8 @@ class Chatkit
     }
 
     /**
+     * Assign a room role to a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -1062,6 +1113,8 @@ class Chatkit
     }
 
     /**
+     * Get available roles
+     *
      * @return array
      * @throws ConfigurationException
      * @throws ConnectionException
@@ -1078,6 +1131,8 @@ class Chatkit
     }
 
     /**
+     * Get roles that a user has
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -1101,6 +1156,8 @@ class Chatkit
     }
 
     /**
+     * Remove a global role from a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -1114,6 +1171,8 @@ class Chatkit
     }
 
     /**
+     * Remove a room role from a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -1130,6 +1189,8 @@ class Chatkit
     }
 
     /**
+     * Get permissions for a global role
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
@@ -1144,6 +1205,8 @@ class Chatkit
     }
 
     /**
+     * Get permissions for a room role
+     *
      * @param $options
      * @return array
      * @throws ConnectionException
@@ -1158,6 +1221,8 @@ class Chatkit
     }
 
     /**
+     * Update permissions for a global role
+     *
      * @param $options
      * @return array
      * @throws ConnectionException
@@ -1172,6 +1237,8 @@ class Chatkit
     }
 
     /**
+     * Update permissions for a room role
+     *
      * @param $options
      * @return array
      * @throws ConnectionException
@@ -1188,6 +1255,8 @@ class Chatkit
     // Cursors API
 
     /**
+     * Get the read cursor for a user in a given room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
