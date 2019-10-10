@@ -19,6 +19,11 @@ class Chatkit
         'debug'        => false,
         'curl_options' => array(),
     );
+
+    protected $api_settings_v2 = array();
+
+    protected $scheduler_settings = array();
+
     protected $logger = null;
     protected $ch = null; // Curl handler
 
@@ -30,10 +35,9 @@ class Chatkit
     const ROOM_SCOPE = 'room';
 
     /**
+     * Chatkit constructor.
      *
      * Initializes a new Chatkit instance.
-     *
-     *
      * @param array $options   Options to configure the Chatkit instance.
      *                         instance_locator - your Chatkit instance locator
      *                         key - your Chatkit instance's key
@@ -41,6 +45,8 @@ class Chatkit
      *                         host - the host; no trailing forward slash.
      *                         port - the http port
      *                         timeout - the http timeout
+     * @throws ConfigurationException
+     * @throws MissingArgumentException
      */
     public function __construct($options)
     {
@@ -74,6 +80,12 @@ class Chatkit
         }
     }
 
+    /**
+     * @param $auth_options
+     * @return array
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function authenticate($auth_options)
     {
         if (!isset($auth_options['user_id'])) {
@@ -93,6 +105,12 @@ class Chatkit
         ];
     }
 
+    /**
+     * @param $auth_options
+     * @return array
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function generateAccessToken($auth_options)
     {
         if (empty($auth_options)) {
@@ -101,12 +119,22 @@ class Chatkit
         return $this->generateToken($auth_options);
     }
 
+    /**
+     * @param array $auth_options
+     * @return array
+     * @throws TypeMismatchException
+     */
     public function generateSuToken($auth_options = [])
     {
         $auth_options = array_merge($auth_options, [ 'su' => true ]);
         return $this->generateToken($auth_options);
     }
 
+    /**
+     * @param array $auth_options
+     * @return array
+     * @throws TypeMismatchException
+     */
     public function generateToken($auth_options = [])
     {
         $split_instance_locator = explode(':', $this->settings['instance_locator']);
@@ -142,7 +170,6 @@ class Chatkit
 
     /**
      * Set a logger to be informed of internal log messages.
-     *
      * @return void
      */
     public function setLogger($logger)
@@ -167,7 +194,7 @@ class Chatkit
     /**
      * Check if the current PHP setup is sufficient to run this class.
      *
-     * @throws ChatkitException if any required dependencies are missing
+     * @throws ConfigurationException if any required dependencies are missing
      *
      * @return void
      */
@@ -184,6 +211,14 @@ class Chatkit
 
     // User API
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function createUser($options)
     {
         if (!isset($options['id'])) {
@@ -219,6 +254,14 @@ class Chatkit
         return $this->apiRequest($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function createUsers($options)
     {
         if (!isset($options['users'])) {
@@ -235,6 +278,14 @@ class Chatkit
         return $this->apiRequest($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function updateUser($options)
     {
         if (!isset($options['id'])) {
@@ -268,6 +319,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function deleteUser($options)
     {
         if (!isset($options['id'])) {
@@ -283,6 +342,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function asyncDeleteUser($options)
     {
         if (!isset($options['id'])) {
@@ -298,6 +365,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function getDeleteStatus($options)
     {
         if (!isset($options['id'])) {
@@ -313,6 +388,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function getUser($options)
     {
         if (!isset($options['id'])) {
@@ -332,6 +415,13 @@ class Chatkit
      * $options['from_timestamp'] should be in the B8601DZw.d format
      *
      * e.g. 2018-04-17T14:02:00Z
+     *
+     * @param array $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
      */
     public function getUsers($options = [])
     {
@@ -353,6 +443,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function getUsersByID($options)
     {
         if (!isset($options['user_ids'])) {
@@ -372,7 +470,7 @@ class Chatkit
     /**
      * Creates a new room.
      *
-     * @param array $options  The room options
+     * @param array $options The room options
      *                          [Available Options]
      *                          • creator_id (string|required): Represents the ID of the user that you want to create the room.
      *                          • name (string|optional): Represents the name with which the room is identified.
@@ -384,6 +482,10 @@ class Chatkit
      *                          • custom_data (assoc array|optional): If you wish to attach some custom data to a room,
      *                              you may provide a list of key value pairs.
      * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
      */
     public function createRoom($options)
     {
@@ -424,6 +526,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function updateRoom($options)
     {
         if (!isset($options['id'])) {
@@ -454,6 +564,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function deleteRoom($options)
     {
         if (!isset($options['id'])) {
@@ -469,6 +587,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function asyncDeleteRoom($options)
     {
         if (!isset($options['id'])) {
@@ -484,6 +610,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function getRoom($options)
     {
         if (!isset($options['id'])) {
@@ -499,6 +633,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param array $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function getRooms($options = [])
     {
         $query_params = [];
@@ -521,14 +663,29 @@ class Chatkit
 
     /**
      * Get all rooms a user belongs to
+     *
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
      */
     public function getUserRooms($options)
     {
         return $this->getRoomsForUser($options);
     }
 
+
     /**
      * Get all rooms that are joinable for a given user
+     *
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
      */
     public function getUserJoinableRooms($options)
     {
@@ -536,6 +693,14 @@ class Chatkit
         return $this->getRoomsForUser($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function addUsersToRoom($options)
     {
         if (!isset($options['room_id'])) {
@@ -555,6 +720,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function removeUsersFromRoom($options)
     {
         if (!isset($options['room_id'])) {
@@ -586,7 +759,10 @@ class Chatkit
      *              • limit (integer|optional): Number of messages to return
      *              • direction (string|optional): Order of messages - one of newer or older
      * @return array
-     * @throws ChatkitException or MissingArgumentException
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
      */
     public function getRoomMessages($options)
     {
@@ -615,6 +791,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function sendMessage($options)
     {
         verify([SENDER_ID,
@@ -658,6 +842,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function sendSimpleMessage($options)
     {
         verify([ [ 'text' => [
@@ -673,6 +865,14 @@ class Chatkit
         return $this->sendMultipartMessage($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function sendMultipartMessage($options)
     {
         verify([SENDER_ID,
@@ -715,20 +915,6 @@ class Chatkit
             'path' => "/rooms/$room_id/messages",
             'jwt' => $token,
             'body' => [ 'parts' => $options['parts'] ]
-        ]);
-    }
-
-    public function fetchMultipartMessage($options)
-    {
-        verify([ROOM_ID, MESSAGE_ID], $options);
-
-        $message_id = $options['message_id'];
-        $room_id = rawurlencode($options['room_id']);
-
-        return $this->apiRequest([
-            'method' => 'GET',
-            'path' => "/rooms/$room_id/messages/$message_id",
-            'jwt' => $this->getServerToken()['token']
         ]);
     }
 
@@ -889,35 +1075,83 @@ class Chatkit
 
     // Roles and permissions API
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function createGlobalRole($options)
     {
         $options['scope'] = self::GLOBAL_SCOPE;
         return $this->createRole($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function createRoomRole($options)
     {
         $options['scope'] = self::ROOM_SCOPE;
         return $this->createRole($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function deleteGlobalRole($options)
     {
         $options['scope'] = self::GLOBAL_SCOPE;
         return $this->deleteRole($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function deleteRoomRole($options)
     {
         $options['scope'] = self::ROOM_SCOPE;
         return $this->deleteRole($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function assignGlobalRoleToUser($options)
     {
         return $this->assignRoleToUser($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function assignRoomRoleToUser($options)
     {
         if (!isset($options['room_id'])) {
@@ -926,6 +1160,13 @@ class Chatkit
         return $this->assignRoleToUser($options);
     }
 
+    /**
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function getRoles()
     {
         return $this->authorizerRequest([
@@ -935,6 +1176,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function getUserRoles($options)
     {
         if (!isset($options['user_id'])) {
@@ -950,11 +1199,27 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function removeGlobalRoleForUser($options)
     {
         return $this->removeRoleForUser($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function removeRoomRoleForUser($options)
     {
         if (!isset($options['room_id'])) {
@@ -963,24 +1228,56 @@ class Chatkit
         return $this->removeRoleForUser($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function getPermissionsForGlobalRole($options)
     {
         $options['scope'] = self::GLOBAL_SCOPE;
         return $this->getPermissionsForRole($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     public function getPermissionsForRoomRole($options)
     {
         $options['scope'] = self::ROOM_SCOPE;
         return $this->getPermissionsForRole($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     public function updatePermissionsForGlobalRole($options)
     {
         $options['scope'] = self::GLOBAL_SCOPE;
         return $this->updatePermissionsForRole($options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     public function updatePermissionsForRoomRole($options)
     {
         $options['scope'] = self::ROOM_SCOPE;
@@ -989,6 +1286,14 @@ class Chatkit
 
     // Cursors API
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     public function getReadCursor($options)
     {
         if (!isset($options['user_id'])) {
@@ -1017,7 +1322,10 @@ class Chatkit
      *              • room_id (string|required): Represents the ID of the room that you want to set the cursor for.
      *              • position (integer|required): Represents the ID of the message the user has read.
      * @return array
-     * @throws ChatkitException or MissingArgumentException
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
      */
     public function setReadCursor($options)
     {
@@ -1049,7 +1357,10 @@ class Chatkit
      *              [Available Options]
      *              • user_id (string|required): Represents the ID of the user that you want to get the read cursors for.
      * @return array
-     * @throws ChatkitException or MissingArgumentException
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
      */
     public function getReadCursorsForUser($options)
     {
@@ -1073,7 +1384,10 @@ class Chatkit
      *              [Available Options]
      *              • room_id (string|required): Represents the ID of the room that you want to get the read cursors for.
      * @return array
-     * @throws ChatkitException or MissingArgumentException
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
      */
     public function getReadCursorsForRoom($options)
     {
@@ -1092,32 +1406,70 @@ class Chatkit
 
     // Service-specific helpers
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws ConfigurationException
+     */
     public function apiRequest($options)
     {
         return $this->makeRequest($this->api_settings, $options);
     }
 
-    // keep v2 for backwards compatibility
+    /**
+     * Keep v2 for backwards compatibility
+     *
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws ConfigurationException
+     */
     public function apiRequestV2($options)
     {
         return $this->makeRequest($this->api_settings_v2, $options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws ConfigurationException
+     */
     public function authorizerRequest($options)
     {
         return $this->makeRequest($this->authorizer_settings, $options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     */
     public function cursorsRequest($options)
     {
         return $this->makeRequest($this->cursor_settings, $options);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws ConfigurationException
+     */
     public function schedulerRequest($options)
     {
         return $this->makeRequest($this->scheduler_settings, $options);
     }
 
+    /**
+     * @param $instance_settings
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws ConfigurationException
+     */
     protected function makeRequest($instance_settings, $options)
     {
         $options = array_merge($options, [ 'Content-Type' => 'application/json' ]);
@@ -1134,6 +1486,14 @@ class Chatkit
         return $this->execCurl($ch);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     protected function getRoomsForUser($options)
     {
         if (!isset($options['id'])) {
@@ -1155,6 +1515,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     protected function createRole($options)
     {
         if (!isset($options['name'])) {
@@ -1177,6 +1545,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     protected function deleteRole($options)
     {
         if (!isset($options['name'])) {
@@ -1193,6 +1569,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     protected function assignRoleToUser($options)
     {
         if (!isset($options['name'])) {
@@ -1221,6 +1605,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     protected function removeRoleForUser($options)
     {
         if (!isset($options['user_id'])) {
@@ -1242,6 +1634,14 @@ class Chatkit
         return $this->authorizerRequest($req_opts);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     protected function getPermissionsForRole($options)
     {
         if (!isset($options['name'])) {
@@ -1258,6 +1658,14 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $options
+     * @return array
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     * @throws ConfigurationException
+     */
     protected function updatePermissionsForRole($options)
     {
         if (!isset($options['name'])) {
@@ -1287,6 +1695,15 @@ class Chatkit
         ]);
     }
 
+    /**
+     * @param $token
+     * @param $room_id
+     * @param $file_part
+     * @return mixed
+     * @throws ConfigurationException
+     * @throws ConnectionException
+     * @throws MissingArgumentException
+     */
     protected function uploadAttachment($token, $room_id, $file_part) {
         $body = $file_part['file'];
         $content_length = strlen($body);
@@ -1325,6 +1742,11 @@ class Chatkit
         return $attachment_id;
     }
 
+    /**
+     * @param $field_names
+     * @param $options
+     * @return array
+     */
     protected function getOptionalFields($field_names, $options) {
         $fields = [];
         foreach ($field_names as $field_name) {
@@ -1338,6 +1760,15 @@ class Chatkit
 
     /**
      * Utility function used to create the curl object setup to interact with the Pusher API
+     *
+     * @param $service_settings
+     * @param $path
+     * @param $jwt
+     * @param $request_method
+     * @param null $body
+     * @param array $query_params
+     * @return false|resource|null
+     * @throws ConfigurationException
      */
     protected function createCurl($service_settings, $path, $jwt, $request_method, $body = null, $query_params = array())
     {
@@ -1360,8 +1791,18 @@ class Chatkit
         return $this->createRawCurl($request_method, $final_url, $body, null, $jwt, true);
     }
 
+
     /**
      * Utility function used to create the curl object with common settings.
+     *
+     * @param $request_method
+     * @param $url
+     * @param null $body
+     * @param null $content_type
+     * @param null $jwt
+     * @param bool $encode_json
+     * @return false|resource|null
+     * @throws ConfigurationException
      */
     protected function createRawCurl($request_method, $url, $body = null, $content_type = null, $jwt = null, $encode_json = false)
     {
@@ -1415,6 +1856,12 @@ class Chatkit
         return $ch;
     }
 
+    /**
+     * @param array $options
+     * @return array
+     * @throws MissingArgumentException
+     * @throws TypeMismatchException
+     */
     protected function getServerToken($options = [])
     {
         $token_options = [ 'su' => true ];
@@ -1424,8 +1871,13 @@ class Chatkit
         return $this->generateAccessToken($token_options);
     }
 
+
     /**
      * Utility function to execute curl and create capture response information.
+     *
+     * @param $ch
+     * @return array
+     * @throws ConnectionException
      */
     protected function execCurl($ch)
     {
