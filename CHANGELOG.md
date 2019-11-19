@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.6.1...HEAD)
 
+### Fixed
+
+- `generateToken` now correctly sets the JWT token expiry on all cases
+
 ## [1.6.1](https://github.com/pusher/chatkit-server-ruby/compare/1.5.0...1.6.1) - 2019-09-06
 
 ## Fixed
