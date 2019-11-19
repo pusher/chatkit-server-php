@@ -130,7 +130,7 @@ class Chatkit
             $claims['su'] = true;
         }
 
-        $claims['exp'] = strtotime('+1 day', $now);
+        $claims['exp'] = $now + 24 * 60 * 60;
 
         $jwt = JWT::encode($claims, $split_key[1]);
         return [
