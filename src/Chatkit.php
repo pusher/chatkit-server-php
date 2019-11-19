@@ -130,6 +130,7 @@ class Chatkit
             $claims['su'] = true;
         }
 
+        // not using functions such as `strtotime` as timezones/daylight savings are problematic
         $claims['exp'] = $now + 24 * 60 * 60;
 
         $jwt = JWT::encode($claims, $split_key[1]);
