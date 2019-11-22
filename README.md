@@ -44,3 +44,26 @@ This SDK depends on PHP modules for cURL and JSON. See [cURL module installation
 ## Getting started
 
 Head over to [our documentation](https://docs.pusher.com/chatkit/reference/server-php).
+
+## Running tests
+
+*WARNING* Executing these tests will issue real requests to the configured Chatkit instance, some of which may be destructive. You should NOT run against a live production instance.
+
+Install [PHPUnit](https://phpunit.de/).
+
+Ensure dependencies are up to date:
+```
+composer update
+```
+
+Set instance locator and secret key environment variables (available in the dashboard at dash.pusher.com):
+```
+export CHATKIT_INSTANCE_LOCATOR="v1:us1:89755518-5782-413d-9446-0d2726dd1e5a"
+export CHATKIT_INSTANCE_KEY="2a188376-d4f0-47fa-8954-dd08115ea98c:NDk5YTZkOTgtMzk2ZC00NDlhLTg1MTYtYjNhODYzYWNiMjczCg="
+```
+
+Execute tests against a Chatkit instance:
+```
+/vendor/phpunit/phpunit/phpunit
+```
+
