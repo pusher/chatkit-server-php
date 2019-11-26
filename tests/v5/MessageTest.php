@@ -92,6 +92,93 @@ class MessageTest extends \Base {
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
     }
 
+       public function testFetchMultipartMessageShouldReturnAResponsePayloadIfARoomIDAndAMessageIDAreProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $content = 'hey there';
+        $sender_id = 'user-008';
+        $send_msg_res = $this->chatkit->sendSimpleMessage([
+                'sender_id' => $user_id,
+                'room_id' => $room_id,
+                'text' => $content
+            ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $message_id = $send_msg_res['body']['message_id'];
+
+        $get_msg_res = $this->chatkit->fetchMultipartMessage(['room_id' => $room_id, 'message_id' => $message_id]);
+
+        $this->assertEquals($room_id, $get_msg_res['body']['room_id']);
+        $this->assertEquals($message_id, $get_msg_res['body']['id']);
+        $this->assertEquals('text/plain', $get_msg_res['body']['parts'][0]['type']);
+        $this->assertEquals('hey there', $get_msg_res['body']['parts'][0]['content']);
+    }
+
+    public function testFetchMultipartMessageRaisesAnExceptionsIfWrongTypesAreProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->fetchMultipartMessage(['room_id' => 887766, 'message_id' => TRUE]);
+    }
+
+    public function testFetchMultipartMessageRaisesAnExceptionIfNoArgumentsAreProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->fetchMultipartMessage([]);
+    }
+
+    public function testFetchMultipartMessageRaisesAnExceptionIfTheMessageIDDoesNotExist()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+        $message_id = 9998887;
+
+        $this->expectException(Chatkit\Exceptions\ChatkitException::class);
+        $this->chatkit->fetchMultipartMessage(['room_id' => $room_id, 'message_id' => $message_id]);
+    }
+
+      public function testFetchMultipartMessageRaisesAnExceptionIfTheRoomIDDoesNotExist()
+    {
+        $user_id = $this->makeUser();
+        $content = 'hey there';
+        $sender_id = 'user-008';
+        $room_id = 'fake-room-innit';
+
+        $this->expectException(Chatkit\Exceptions\ChatkitException::class);
+        $this->chatkit->sendSimpleMessage([
+                'sender_id' => $user_id,
+                'room_id' => $room_id,
+                'text' => $content
+            ]);
+    }
+
+    public function testFetchMultipartMessageRaisesAnExceptionIfTheMessageWasDeleted()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $send_msg_res = $this->chatkit->sendSimpleMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'text' => 'testing'
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $message_id = $send_msg_res['body']['message_id'];
+
+        $delete_msg_res = $this->chatkit->deleteMessage([
+            'message_id' => $send_msg_res['body']['message_id'],
+            'room_id' => $room_id
+        ]);
+        $this->assertEquals($delete_msg_res['status'], 204);
+        $this->assertEquals($delete_msg_res['body'], null);
+
+        $this->expectException(Chatkit\Exceptions\ChatkitException::class);
+        $this->chatkit->fetchMultipartMessage(['room_id' => $room_id, 'message_id' => $message_id]);
+    }
+
     public function testFetchMultipartMessagesRaisesAnExceptionIfNoRoomIDIsProvided()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
@@ -213,7 +300,6 @@ class MessageTest extends \Base {
         $this->assertEquals(200, $status);
         $this->assertEquals($file, $data);
     }
-
 
     public function testDeleteMessageRaisesAnExceptionIfNoIDIsProvided()
     {
