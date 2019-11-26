@@ -1,5 +1,4 @@
 # Changelog
-
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
@@ -15,13 +14,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
--   `generateToken` now correctly sets the JWT token expiry on all cases
+- `generateToken` now correctly sets the JWT token expiry on all cases
 
 ## [1.6.1](https://github.com/pusher/chatkit-server-ruby/compare/1.5.0...1.6.1) - 2019-09-06
 
 ### Fixed
 
--   `getOptionalFields` now works as expected and returns optionally set values.
+- `getOptionalFields` now works as expected and returns optionally set values.
 
 ## [1.6.0](https://github.com/pusher/chatkit-server-ruby/compare/1.5.0...1.6.0) - 2019-07-30
 
@@ -33,43 +32,44 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
--   `createRoom` now accepts an optional `id` parameter that is then uniquely used to identify the
-    room. If one isn't provided, the server will generate an ID instead.
+- `createRoom` now accepts an optional `id` parameter that is then uniquely used to identify the
+  room. If one isn't provided, the server will generate an ID instead.
 
 ### Changed
 
--   The `deleteMessage` method now _requires_ a room ID parameter, `room_id` and the `id`
-    parameter has been renamed to `message_id` to avoid any ambiguity.
+- The `deleteMessage` method now *requires* a room ID parameter, `room_id` and the `id`
+  parameter has been renamed to `message_id` to avoid any ambiguity.
 
 ## [1.4.0](https://github.com/pusher/chatkit-server-ruby/compare/1.3.0...1.4.0) - 2019-06-24
 
 ### Changed
 
--   Unread counts. No new methods are added, but `getUserRooms` now include `unread_count` and `last_message_at` in the response
+- Unread counts. No new methods are added, but `getUserRooms` now include `unread_count` and `last_message_at` in the response
+
 
 ## [1.3.0](https://github.com/pusher/chatkit-server-php/compare/1.2.0...1.3.0) - 2019-06-18
 
 ### Added
 
--   Async deletion methods. `asyncDeleteUser`, `asyncDeleteRoom` and `getDeleteStatus`.
-    The `deleteRoom` and `deleteUser` methods should be considered deprecated, and will be removed in a future version.
+- Async deletion methods. `asyncDeleteUser`, `asyncDeleteRoom` and `getDeleteStatus`.
+  The `deleteRoom` and `deleteUser` methods should be considered deprecated, and will be removed in a future version.
 
 ## [1.2.0](https://github.com/pusher/chatkit-server-php/compare/1.1.0...1.2.0) - 2019-03-08
 
 ### Added
 
--   `sendMultipartMessage` and `sendSimpleMessage` using the new V3 endpoint for message sending
--   `fetchMultipartMessage` using the new V3 endpoint for message fetching
+- `sendMultipartMessage` and `sendSimpleMessage` using the new V3 endpoint for message sending
+- `fetchMultipartMessage` using the new V3 endpoint for message fetching
 
 ### Changed
 
--   all methods except `sendMessage` and `getRoomMessages` uses new V3 endpoints
+- all methods except `sendMessage` and `getRoomMessages` uses new V3 endpoints
 
 ## [1.1.0](https://github.com/pusher/chatkit-server-php/compare/1.0.0...1.1.0) - 2018-11-08
 
 ### Added
 
--   `custom_data` option that can be passed to `createRoom` and `updateRoom`
+- `custom_data` option that can be passed to `createRoom` and `updateRoom`
 
 ## [1.0.0](https://github.com/pusher/chatkit-server-php/compare/0.5.9...1.0.0) - 2018-10-30
 
@@ -77,119 +77,119 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Breaking Changes
 
--   `getUsersByIds` is now `getUsersById`
--   `getUsers` now takes an array with an optional `from_timestamp` key instead of a `from_ts` key
--   `getUserReadCursors` is now `getReadCursorsForUser`
+- `getUsersByIds` is now `getUsersById`
+- `getUsers` now takes an array with an optional `from_timestamp` key instead of a `from_ts` key
+- `getUserReadCursors` is now `getReadCursorsForUser`
 
 ### Added
 
--   The following new methods:
-    -   `generateSuToken`
-    -   `createUsers`
-    -   `getUser`
-    -   `updateRoom`
-    -   `deleteRoom`
-    -   `getRoom`
-    -   `getRooms`
-    -   `getUserJoinableRooms`
-    -   `addUsersToRoom`
-    -   `removeUsersFromRoom`
-    -   `createGlobalRole`
-    -   `createRoomRole`
-    -   `deleteGlobalRole`
-    -   `deleteRoomRole`
-    -   `assignGlobalRoleToUser`
-    -   `assignRoomRoleToUser`
-    -   `getRoles`
-    -   `getUserRoles`
-    -   `removeGlobalRoleForUser`
-    -   `removeRoomRoleForUser`
-    -   `getPermissionsForGlobalRole`
-    -   `getPermissionsForRoomRole`
-    -   `updatePermissionsForGlobalRole`
-    -   `updatePermissionsForRoomRole`
-    -   `getReadCursor`
-    -   `getReadCursorsForRoom`
-    -   `apiRequest`
-    -   `authorizerRequest`
-    -   `cursorsRequest`
+- The following new methods:
+  - `generateSuToken`
+  - `createUsers`
+  - `getUser`
+  - `updateRoom`
+  - `deleteRoom`
+  - `getRoom`
+  - `getRooms`
+  - `getUserJoinableRooms`
+  - `addUsersToRoom`
+  - `removeUsersFromRoom`
+  - `createGlobalRole`
+  - `createRoomRole`
+  - `deleteGlobalRole`
+  - `deleteRoomRole`
+  - `assignGlobalRoleToUser`
+  - `assignRoomRoleToUser`
+  - `getRoles`
+  - `getUserRoles`
+  - `removeGlobalRoleForUser`
+  - `removeRoomRoleForUser`
+  - `getPermissionsForGlobalRole`
+  - `getPermissionsForRoomRole`
+  - `updatePermissionsForGlobalRole`
+  - `updatePermissionsForRoomRole`
+  - `getReadCursor`
+  - `getReadCursorsForRoom`
+  - `apiRequest`
+  - `authorizerRequest`
+  - `cursorsRequest`
 
 ## [0.5.9](https://github.com/pusher/chatkit-server-php/compare/0.5.8...0.5.9) - 2018-08-29
 
 ### Added
 
--   `getRooms` functionality added. [#31](https://github.com/pusher/chatkit-server-php/pull/31) by [@philipnjuguna66](https://github.com/philipnjuguna66)
+- `getRooms` functionality added. [#31](https://github.com/pusher/chatkit-server-php/pull/31) by [@philipnjuguna66](https://github.com/philipnjuguna66)
 
 ## [0.5.8](https://github.com/pusher/chatkit-server-php/compare/0.5.7...0.5.8) - 2018-08-21
 
 ### Added
 
--   `addUsersToRoom` and `removeUsersFromRoom` functionality added. [#29](https://github.com/pusher/chatkit-server-php/pull/29) by [@mludi](https://github.com/mludi)
+- `addUsersToRoom` and `removeUsersFromRoom` functionality added. [#29](https://github.com/pusher/chatkit-server-php/pull/29) by [@mludi](https://github.com/mludi)
 
 ## [0.5.7](https://github.com/pusher/chatkit-server-php/compare/0.5.6...0.5.7) - 2018-08-14
 
 ### Added
 
--   `joinRoom` functionality added. [#27](https://github.com/pusher/chatkit-server-php/pull/27) by [@mludi](https://github.com/mludi)
+- `joinRoom` functionality added. [#27](https://github.com/pusher/chatkit-server-php/pull/27) by [@mludi](https://github.com/mludi)
 
 ## [0.5.6](https://github.com/pusher/chatkit-server-php/compare/0.5.5...0.5.6) - 2018-07-30
 
 ### Fixed
 
--   `getUsersByIds` and `getUsers` now properly set query parameters
+- `getUsersByIds` and `getUsers` now properly set query parameters
 
 ## [0.5.5](https://github.com/pusher/chatkit-server-php/compare/0.5.4...0.5.5) - 2018-07-30
 
 ### Added
 
--   `setReadCursor` functionality added. [#22](https://github.com/pusher/chatkit-server-php/pull/22) by [@morrislaptop](https://github.com/morrislaptop)
--   `getUserReadCursors` functionality added. [#22](https://github.com/pusher/chatkit-server-php/pull/22) by [@morrislaptop](https://github.com/morrislaptop)
--   `getRoomMessages` now supports providing an `initial_id`, a `limit`, and a `direction`. [#22](https://github.com/pusher/chatkit-server-php/pull/22) by [@morrislaptop](https://github.com/morrislaptop)
+- `setReadCursor` functionality added. [#22](https://github.com/pusher/chatkit-server-php/pull/22) by [@morrislaptop](https://github.com/morrislaptop)
+- `getUserReadCursors` functionality added. [#22](https://github.com/pusher/chatkit-server-php/pull/22) by [@morrislaptop](https://github.com/morrislaptop)
+- `getRoomMessages` now supports providing an `initial_id`, a `limit`, and a `direction`. [#22](https://github.com/pusher/chatkit-server-php/pull/22) by [@morrislaptop](https://github.com/morrislaptop)
 
 ## [0.5.4](https://github.com/pusher/chatkit-server-php/compare/0.5.3...0.5.4) - 2018-06-25
 
 ### Added
 
--   `getRoomMessages` functionality added [#21](https://github.com/pusher/chatkit-server-php/pull/21) by [@morrislaptop](https://github.com/morrislaptop)
+- `getRoomMessages` functionality added [#21](https://github.com/pusher/chatkit-server-php/pull/21) by [@morrislaptop](https://github.com/morrislaptop)
 
 ## [0.5.3](https://github.com/pusher/chatkit-server-php/compare/0.5.2...0.5.3) - 2018-06-11
 
 ### Added
 
--   `deleteRoom` functionality added [#19](https://github.com/pusher/chatkit-server-php/pull/19) by [@morrislaptop](https://github.com/morrislaptop)
--   `getUsers` functionality added [#20](https://github.com/pusher/chatkit-server-php/pull/20) by [@morrislaptop](https://github.com/morrislaptop)
+- `deleteRoom` functionality added [#19](https://github.com/pusher/chatkit-server-php/pull/19) by [@morrislaptop](https://github.com/morrislaptop)
+- `getUsers` functionality added [#20](https://github.com/pusher/chatkit-server-php/pull/20) by [@morrislaptop](https://github.com/morrislaptop)
 
 ## [0.5.2](https://github.com/pusher/chatkit-server-php/compare/0.5.1...0.5.2) - 2018-06-07
 
 ### Fixed
 
--   `updateUser` validates information properly [#18](https://github.com/pusher/chatkit-server-php/pull/18) by [@morrislaptop](https://github.com/morrislaptop)
+- `updateUser` validates information properly [#18](https://github.com/pusher/chatkit-server-php/pull/18) by [@morrislaptop](https://github.com/morrislaptop)
 
 ### Added
 
--   `sendMessage` supports send messages with attachments [#18](https://github.com/pusher/chatkit-server-php/pull/18) by [@morrislaptop](https://github.com/morrislaptop)
+- `sendMessage` supports send messages with attachments [#18](https://github.com/pusher/chatkit-server-php/pull/18) by [@morrislaptop](https://github.com/morrislaptop)
 
 ## [0.5.1](https://github.com/pusher/chatkit-server-php/compare/0.5.0...0.5.1) - 2018-05-25
 
 ### Changed
 
--   User ID is validated to be a string as part of `createUser`, `authenticate`, and `generateAccessToken` calls
+- User ID is validated to be a string as part of `createUser`, `authenticate`, and `generateAccessToken` calls
 
 ### Fixed
 
--   `getUserRooms` no longer crashes if `joinable` option not set
+- `getUserRooms` no longer crashes if `joinable` option not set
 
 ## [0.5.0](https://github.com/pusher/chatkit-server-php/compare/0.4.0...0.5.0) - 2018-05-11
 
 ### Changed
 
--   API calls to Chatkit servers now return an associative array that has the keys `'status'` and `'body'`.
+- API calls to Chatkit servers now return an associative array that has the keys `'status'` and `'body'`.
 
 ## [0.4.0](https://github.com/pusher/chatkit-server-php/compare/0.3.0...0.4.0) - 2018-04-20
 
 ### Added
 
--   `authenticate` has been added. This should be the function you use to authenticate your users for Chatkit.
+- `authenticate` has been added. This should be the function you use to authenticate your users for Chatkit.
 
 You need to provide an associative array that has a `user_id` key with a string value. For example:
 
@@ -215,27 +215,27 @@ It returns an associative array that is structured like this:
 
 where:
 
--   `status` is the suggested HTTP response status code,
--   `headers` are the suggested response headers,
--   `body` holds the token payload.
+* `status` is the suggested HTTP response status code,
+* `headers` are the suggested response headers,
+* `body` holds the token payload.
 
 ### Removed
 
--   `getTokenPair` has been removed
+- `getTokenPair` has been removed
 
 ### Changed
 
--   Authentication no longer returns refresh tokens.
+- Authentication no longer returns refresh tokens.
 
 If your client devices are running the:
 
--   Swift SDK - (**breaking change**) you must be using version `>= 0.8.0` of [chatkit-swift](https://github.com/pusher/chatkit-swift).
--   Android SDK - you won't be affected regardless of which version you are running.
--   JS SDK - you won't be affected regardless of which version you are running.
+* Swift SDK - (**breaking change**) you must be using version `>= 0.8.0` of [chatkit-swift](https://github.com/pusher/chatkit-swift).
+* Android SDK - you won't be affected regardless of which version you are running.
+* JS SDK - you won't be affected regardless of which version you are running.
 
-*   (Nearly) all functions now take an object (an associative array) as their sole parameter. As examples:
+- (Nearly) all functions now take an object (an associative array) as their sole parameter. As examples:
 
--   Constructing a Chatkit object is done like this:
+* Constructing a Chatkit object is done like this:
 
 ```php
 $chatkit = new Chatkit\Chatkit([
@@ -244,7 +244,7 @@ $chatkit = new Chatkit\Chatkit([
 ]);
 ```
 
--   `createUser` is now called like this:
+* `createUser` is now called like this:
 
 ```php
 $chatkit->createUser([
@@ -257,7 +257,7 @@ $chatkit->createUser([
 ]);
 ```
 
--   `authenticate` (previously `getTokenPair`) is now called like this:
+* `authenticate` (previously `getTokenPair`) is now called like this:
 
 ```php
 $chatkit->authenticate([
@@ -265,7 +265,7 @@ $chatkit->authenticate([
 ]);
 ```
 
--   `createRoom` is now called like this:
+* `createRoom` is now called like this:
 
 ```php
 $chatkit->createRoom([
