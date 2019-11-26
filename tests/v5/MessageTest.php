@@ -120,14 +120,40 @@ class MessageTest extends \Base {
         $user_id = $this->makeUser();
         $room_id = $this->makeRoom($user_id);
 
+        $send_msg_res = $this->chatkit->sendSimpleMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'text' => 'testing'
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $message_id = $send_msg_res['body']['message_id'];
+
         $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
-        $this->chatkit->fetchMultipartMessage(['room_id' => 887766, 'message_id' => TRUE]);
+        $this->chatkit->fetchMultipartMessage(['room_id' => 887766, 'message_id' => $message_id]);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->fetchMultipartMessage(['room_id' => $room_id, 'message_id' => TRUE]);
     }
 
     public function testFetchMultipartMessageRaisesAnExceptionIfNoArgumentsAreProvided()
     {
+
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $send_msg_res = $this->chatkit->sendSimpleMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'text' => 'testing'
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $message_id = $send_msg_res['body']['message_id'];
+
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->fetchMultipartMessage([]);
+        $this->chatkit->fetchMultipartMessage([ 'message_id' => $message_id ]);
+
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->fetchMultipartMessage([ 'room_id' => $room_id ]);
     }
 
     public function testFetchMultipartMessageRaisesAnExceptionIfTheMessageIDDoesNotExist()
@@ -136,7 +162,7 @@ class MessageTest extends \Base {
         $room_id = $this->makeRoom($user_id);
         $message_id = 9998887;
 
-        $this->expectException(Chatkit\Exceptions\ChatkitException::class);
+        $this->expectException(Chatkit\Exceptions\ChatkitException::class); // log?
         $this->chatkit->fetchMultipartMessage(['room_id' => $room_id, 'message_id' => $message_id]);
     }
 
@@ -144,15 +170,19 @@ class MessageTest extends \Base {
     {
         $user_id = $this->makeUser();
         $content = 'hey there';
-        $sender_id = 'user-008';
-        $room_id = 'fake-room-innit';
+         $room_id = $this->makeRoom($user_id);
+
+        $send_msg_res = $this->chatkit->sendSimpleMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'text' => 'testing'
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $message_id = $send_msg_res['body']['message_id'];
 
         $this->expectException(Chatkit\Exceptions\ChatkitException::class);
-        $this->chatkit->sendSimpleMessage([
-                'sender_id' => $user_id,
-                'room_id' => $room_id,
-                'text' => $content
-            ]);
+        $get_msg_res = $this->chatkit->fetchMultipartMessage(['room_id' => 'fake-room-innit', 'message_id' => $message_id]);
+        $this->assertEquals($get_msg_res['status'], 404);
     }
 
     public function testFetchMultipartMessageRaisesAnExceptionIfTheMessageWasDeleted()

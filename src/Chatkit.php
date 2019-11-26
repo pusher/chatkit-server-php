@@ -720,14 +720,6 @@ class Chatkit
 
     public function fetchMultipartMessage($options)
     {
-        if (!isset($options['message_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the message to fetch');
-        }
-
-        if (!isset($options['room_id'])) {
-            throw new MissingArgumentException('You must provide the ID of the room to which the message belongs');
-        }
-
         verify([ROOM_ID, MESSAGE_ID], $options);
 
         $message_id = $options['message_id'];
