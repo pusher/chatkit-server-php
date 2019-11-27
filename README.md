@@ -66,4 +66,7 @@ Execute tests against a Chatkit instance:
 ```
 /vendor/phpunit/phpunit/phpunit
 ```
-
+## Release process
+1. Update the CHANGELOG
+2. On Git, tag with the new version and push
+[Packagist](https://packagist.org/packages/pusher/pusher-chatkit-server) automatically releases new versions of the library upon detecting a new Github release.
