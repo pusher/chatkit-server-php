@@ -718,6 +718,20 @@ class Chatkit
         ]);
     }
 
+    public function fetchMultipartMessage($options)
+    {
+        verify([ROOM_ID, MESSAGE_ID], $options);
+
+        $message_id = $options['message_id'];
+        $room_id = rawurlencode($options['room_id']);
+
+        return $this->apiRequest([
+            'method' => 'GET',
+            'path' => "/rooms/$room_id/messages/$message_id",
+            'jwt' => $this->getServerToken()['token']
+        ]);
+    }
+
     public function fetchMultipartMessages($options)
     {
         verify([ROOM_ID,
@@ -1365,6 +1379,13 @@ const SENDER_ID = [ 'sender_id' =>
                       'missing_message' =>
                       'You must provide the ID of the user sending the message'
                     ]
+];
+
+const MESSAGE_ID = [ 'message_id' =>
+                        [ 'type' => 'integer',
+                          'missing_message' =>
+                          'You must provide the message ID'
+                        ]
 ];
 
 function verify($fields, $options) {

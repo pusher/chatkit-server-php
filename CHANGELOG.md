@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.6.2...HEAD)
 
+### Added
+
+-   Support for fetching a message by its message ID, via `fetchMultipartMessage`
+
 ## [1.6.2](https://github.com/pusher/chatkit-server-ruby/compare/1.6.1...1.6.2) - 2019-11-19
 
 ### Fixed
