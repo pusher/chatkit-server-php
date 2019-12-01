@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/chatkit-server-php/compare/1.7.0...HEAD)
 
+### Added
+
+- Adds message editing via `edit{Simple,Multipart,}Message`.
+
 ## [1.7.0](https://github.com/pusher/chatkit-server-php/compare/1.6.2...1.7.0)
 
 ### Added
