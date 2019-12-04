@@ -1490,7 +1490,7 @@ const SENDER_ID = [ 'sender_id' =>
 const MESSAGE_ID = [ 'message_id' =>
                      [ 'type' => 'int',
                        'missing_message' =>
-                       'You must provide the ID of the message to edit'
+                       'You must provide the ID of the message'
                      ]
 ];
 
