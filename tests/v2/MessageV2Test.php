@@ -204,4 +204,143 @@ class MessageV2Test extends \Base {
         $this->assertEquals($get_msg_res['body'][1]['room_id'], $room_res['body']['id']);
     }
 
+
+    public function testEditMessageRaisesAnExceptionIfNoRoomIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->editMessage([ 'sender_id' => 'ham', 'message_id' => 1, 'text' => 'hi' ]);
+    }
+
+    public function testEditMessageRaisesAnExceptionIfNoMessageIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->editMessage([ 'sender_id' => 'ham', 'room_id' => 'room', 'text' => 'hi' ]);
+    }
+
+    public function testEditMessageRaisesAnExceptionIfNoSenderIDIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->editMessage([ 'room_id' => '123', 'message_id' => 1, 'text' => 'hi' ]);
+    }
+
+    public function testEditMessageRaisesAnExceptionIfNoTextIsProvided()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->editMessage([ 'sender_id' => 'ham', 'room_id' => '123', 'message_id' => 1]);
+    }
+
+    public function testEditMessageRaisesAnExceptionIfNoResourceLinkIsProvidedForAMessageWithAnAttachment()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->editMessage([
+            'room_id' => '123',
+            'message_id' => 1,
+            'sender_id' => 'ham',
+            'text' => 'hi',
+            'attachment' => [
+                'type' => 'audio'
+            ]
+        ]);
+    }
+
+    public function testEditMessageRaisesAnExceptionIfNoTypeIsProvidedForAMessageWithAnAttachment()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->editMessage([
+            'room_id' => '123',
+            'message_id' => 1,
+            'sender_id' => 'ham',
+            'text' => 'hi',
+            'attachment' => [
+                'resource_link' => 'https://placekitten.com/200/300'
+            ]
+        ]);
+    }
+
+    public function testEditMessageRaisesAnExceptionIfAnInvalidTypeIsProvidedForAMessageWithAnAttachment()
+    {
+        $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
+        $this->chatkit->editMessage([
+            'room_id' => '123',
+            'message_id' => 1,
+            'sender_id' => 'ham',
+            'text' => 'hi',
+            'attachment' => [
+                'resource_link' => 'https://placekitten.com/200/300',
+                'type' => 'somethingstupid'
+            ]
+        ]);
+    }
+
+    public function testEditMessageShouldReturnAResponseIfARoomIDSenderIDAndTextAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $send_msg_res = $this->chatkit->sendMessage([
+          'sender_id' => $user_id,
+          'room_id' => $room_res['body']['id'],
+          'text' => 'hi'
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+
+        $edit_msg_res = $this->chatkit->editMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'message_id' => $send_msg_res['body']['message_id'],
+            'text' => 'edited-text'
+        ]);
+        $this->assertEquals($edit_msg_res['status'], 204);
+    }
+
+    public function testEditMessageShouldReturnAResponseIfARoomIDMessageIDSenderIDTextAndALinkAttachmentAreProvided()
+    {
+        $user_id = $this->guidv4(openssl_random_pseudo_bytes(16));
+        $user_res = $this->chatkit->createUser([
+            'id' => $user_id,
+            'name' => 'Ham'
+        ]);
+        $this->assertEquals($user_res['status'], 201);
+
+        $room_res = $this->chatkit->createRoom([
+            'creator_id' => $user_id,
+            'name' => 'my room'
+        ]);
+        $this->assertEquals($room_res['status'], 201);
+
+        $send_msg_res = $this->chatkit->sendMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'text' => 'testing',
+            'attachment' => [
+                'resource_link' => 'https://placekitten.com/200/300',
+                'type' => 'image'
+            ]
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+
+        $edit_msg_res = $this->chatkit->editMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_res['body']['id'],
+            'message_id' => $send_msg_res['body']['message_id'],
+            'text' => 'edited-text',
+            'attachment' => [
+                'resource_link' => 'https://placekitten.com/200/300',
+                'type' => 'image'
+            ]
+        ]);
+        $this->assertEquals($edit_msg_res['status'], 204);
+    }
 }

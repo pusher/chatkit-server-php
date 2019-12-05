@@ -92,7 +92,125 @@ class MessageTest extends \Base {
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
     }
 
-       public function testFetchMultipartMessageShouldReturnAResponsePayloadIfARoomIDAndAMessageIDAreProvided()
+    public function testEditMultipartMessageShouldReturnAResponseIfPartsProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $parts = [ ['type' => 'text/plain',
+                    'content' => 'testing'],
+                   ['type' => 'image/png',
+                    'url' => 'https://example.com/image.png']
+        ];
+
+        $send_msg_res = $this->chatkit->sendMultipartMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'parts' => $parts
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+
+        $edit_msg_res = $this->chatkit->editMultipartMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'message_id' => $send_msg_res['body']['message_id'],
+            'parts' => $parts
+        ]);
+        $this->assertEquals($edit_msg_res['status'], 204);
+    }
+
+    public function testEditMultipartMessagesRaisesAnExceptionIfWrongTypesAreProvided()
+    {
+        $good_parts = [ ['type' => 'binary/octet-stream',
+                         'content' => 'test' ]
+        ];
+
+        $bad_parts = [ ['type' => 'binary/octet-stream',
+                        'content' => 42 ]
+        ];
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->editMultipartMessage([ 'sender_id' => 'user_id',
+                                               'room_id' => 42,
+                                               'message_id' => 42,
+                                               'parts' => $good_parts
+        ]);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->editMultipartMessage([ 'sender_id' => 42,
+                                               'room_id' => 'room_id',
+                                               'message_id' => 42,
+                                               'parts' => $good_parts
+        ]);
+
+        $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
+        $this->chatkit->editMultipartMessage([ 'sender_id' => 'user_id',
+                                               'room_id' => 'room_id',
+                                               'message_id' => 42,
+                                               'parts' => $bad_parts
+        ]);
+    }
+
+    public function testEditMultipartMessageShouldReturnAResponseIfAttachmentsProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $file = openssl_random_pseudo_bytes(100);
+        $file_name = 'a broken image';
+
+        $parts = [ ['type' => 'image/png',
+                    'file' => $file,
+                    'name' => $file_name,
+                    'customData' => [ 'some' =>
+                                      [ 'nested' => 'data',
+                                        'number' => 42
+                                      ] ],
+                    'origin' => 'http://example.com' ]
+        ];
+
+        $send_msg_res = $this->chatkit->sendMultipartMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'parts' => $parts
+        ]);
+
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+
+        $edit_msg_res = $this->chatkit->editMultipartMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'message_id' => $send_msg_res['body']['message_id'],
+            'parts' => $parts
+        ]);
+        $this->assertEquals($edit_msg_res['status'], 204);
+    }
+
+    public function testEditSimpleMessageShouldReturnAResponseIfARoomIDSenderIDMessageIDAndTextAreProvided()
+    {
+        $user_id = $this->makeUser();
+        $room_id = $this->makeRoom($user_id);
+
+        $send_msg_res = $this->chatkit->sendSimpleMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'text' => 'testing'
+        ]);
+        $this->assertEquals($send_msg_res['status'], 201);
+        $this->assertArrayHasKey('message_id', $send_msg_res['body']);
+
+        $edit_msg_res = $this->chatkit->editSimpleMessage([
+            'sender_id' => $user_id,
+            'room_id' => $room_id,
+            'message_id' => $send_msg_res['body']['message_id'],
+            'text' => 'testing'
+        ]);
+        $this->assertEquals($edit_msg_res['status'], 204);
+    }
+
+    public function testFetchMultipartMessageShouldReturnAResponsePayloadIfARoomIDAndAMessageIDAreProvided()
     {
         $user_id = $this->makeUser();
         $room_id = $this->makeRoom($user_id);
@@ -357,4 +475,6 @@ class MessageTest extends \Base {
         $this->assertEquals($delete_msg_res['body'], null);
     }
 
+
 }
+

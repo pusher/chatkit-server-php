@@ -381,8 +381,8 @@ class Chatkit
      *                          • private (boolean|optional): Indicates if a room should be private or public. Private by default.
      *                          • user_ids (array|optional): If you wish to add users to the room at the point of creation,
      *                              you may provide their user IDs.
-     *							. custom_data (assoc array|optional): If you wish to attach some custom data to a room,
-     *								you may provide a list of key value pairs.
+     *                          • custom_data (assoc array|optional): If you wish to attach some custom data to a room,
+     *                              you may provide a list of key value pairs.
      * @return array
      */
     public function createRoom($options)
@@ -750,6 +750,112 @@ class Chatkit
             'path' => "/rooms/$room_id/messages",
             'jwt' => $this->getServerToken()['token'],
             'query' => $query_params
+        ]);
+    }
+
+    public function editMessage($options)
+    {
+        verify([SENDER_ID,
+                ROOM_ID,
+                MESSAGE_ID,
+                [ 'text' => [
+                    'type' => 'string',
+                    'missing_message' =>
+                    'You must provide some text for the message' ]
+                ]
+        ], $options);
+
+        $body = array(
+            'text' => $options['text']
+        );
+
+        if (isset($options['attachment'])) {
+            if (!isset($options['attachment']['resource_link'])) {
+                throw new MissingArgumentException('You must provide a resource_link for the message attachment');
+            }
+
+            $valid_file_types = ['image', 'video', 'audio', 'file'];
+            if (!isset($options['attachment']['type']) || !in_array($options['attachment']['type'], $valid_file_types)) {
+                $valid_file_types_str = implode(',', $valid_file_types);
+                throw new MissingArgumentException("You must provide the type for the attachment. This can be one of $valid_file_types_str");
+            }
+
+            $body['attachment'] = array(
+                'resource_link' => $options['attachment']['resource_link'],
+                'type' => $options['attachment']['type']
+            );
+        }
+
+        $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
+        $room_id = rawurlencode($options['room_id']);
+        $message_id = $options['message_id'];
+
+        return $this->apiRequestV2([
+            'method' => 'PUT',
+            'path' => "/rooms/$room_id/messages/$message_id",
+            'jwt' => $token,
+            'body' => $body
+        ]);
+    }
+
+    public function editSimpleMessage($options)
+    {
+        verify([ [ 'text' => [
+            'type' => 'string',
+            'missing_message' =>
+            'You must provide some text for the message' ] ]
+        ], $options);
+
+        $options['parts'] = [ [ 'type' => 'text/plain',
+                                'content' => $options['text'] ]
+        ];
+        unset($options['text']);
+        return $this->editMultipartMessage($options);
+    }
+
+    public function editMultipartMessage($options)
+    {
+        verify([SENDER_ID,
+                ROOM_ID,
+                MESSAGE_ID,
+                [ 'parts' => [
+                    'type' => 'non_empty_array',
+                    'missing_message' =>
+                    'You must provide a non-empty parts array' ]
+                ]
+        ], $options);
+
+        // this assumes the token lives long enough to finish all S3 uploads
+        $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
+        $room_id = rawurlencode($options['room_id']);
+
+        foreach($options['parts'] as &$part) {
+            verify([ [ 'type' => [ 'type' => 'string',
+                                   'missing_message' => 'Each part must have a type' ] ],
+                     [ 'file' => OPTIONAL_STRING ],
+                     [ 'content' => OPTIONAL_STRING ],
+                     [ 'url' => OPTIONAL_STRING ],
+                     [ 'name' => OPTIONAL_STRING ],
+                     [ 'customData' => [ 'type' => 'json', 'optional' => true ] ]
+            ], $part);
+
+            if (!isset($part['content']) && !isset($part['url']) && !isset($part['file'])) {
+                throw new MissingArgumentException('Each part must define either file, content or url');
+            }
+
+            if (isset($part['file'])) {
+                $attachment_id = $this->uploadAttachment($token, $room_id, $part);
+                $part['attachment'] = [ 'id' => $attachment_id ];
+                unset($part['file']);
+            }
+
+        }
+        $message_id = $options['message_id'];
+        return $this->apiRequest([
+            'method' => 'PUT',
+            'path' => "/rooms/$room_id/messages/$message_id",
+            'jwt' => $token,
+            'body' => [ 'parts' => $options['parts'] ]
         ]);
     }
 
@@ -1382,10 +1488,10 @@ const SENDER_ID = [ 'sender_id' =>
 ];
 
 const MESSAGE_ID = [ 'message_id' =>
-                        [ 'type' => 'integer',
-                          'missing_message' =>
-                          'You must provide the message ID'
-                        ]
+                     [ 'type' => 'int',
+                       'missing_message' =>
+                       'You must provide the ID of the message'
+                     ]
 ];
 
 function verify($fields, $options) {
