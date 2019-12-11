@@ -208,33 +208,31 @@ class MessageV2Test extends \Base {
     public function testEditMessageRaisesAnExceptionIfNoRoomIDIsProvided()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->editMessage([ 'sender_id' => 'ham', 'message_id' => 1, 'text' => 'hi' ]);
+        $this->chatkit->editMessage(null, 1, [ 'sender_id' => 'ham', 'text' => 'hi' ]);
     }
 
     public function testEditMessageRaisesAnExceptionIfNoMessageIDIsProvided()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->editMessage([ 'sender_id' => 'ham', 'room_id' => 'room', 'text' => 'hi' ]);
+        $this->chatkit->editMessage('room', null, [ 'sender_id' => 'ham', 'text' => 'hi' ]);
     }
 
     public function testEditMessageRaisesAnExceptionIfNoSenderIDIsProvided()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->editMessage([ 'room_id' => '123', 'message_id' => 1, 'text' => 'hi' ]);
+        $this->chatkit->editMessage('123', 1, [ 'text' => 'hi' ]);
     }
 
     public function testEditMessageRaisesAnExceptionIfNoTextIsProvided()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->editMessage([ 'sender_id' => 'ham', 'room_id' => '123', 'message_id' => 1]);
+        $this->chatkit->editMessage('123', 1, [ 'sender_id' => 'ham']);
     }
 
     public function testEditMessageRaisesAnExceptionIfNoResourceLinkIsProvidedForAMessageWithAnAttachment()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->editMessage([
-            'room_id' => '123',
-            'message_id' => 1,
+        $this->chatkit->editMessage('123', 1, [
             'sender_id' => 'ham',
             'text' => 'hi',
             'attachment' => [
@@ -246,9 +244,7 @@ class MessageV2Test extends \Base {
     public function testEditMessageRaisesAnExceptionIfNoTypeIsProvidedForAMessageWithAnAttachment()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->editMessage([
-            'room_id' => '123',
-            'message_id' => 1,
+        $this->chatkit->editMessage('123', 1, [
             'sender_id' => 'ham',
             'text' => 'hi',
             'attachment' => [
@@ -260,9 +256,7 @@ class MessageV2Test extends \Base {
     public function testEditMessageRaisesAnExceptionIfAnInvalidTypeIsProvidedForAMessageWithAnAttachment()
     {
         $this->expectException(Chatkit\Exceptions\MissingArgumentException::class);
-        $this->chatkit->editMessage([
-            'room_id' => '123',
-            'message_id' => 1,
+        $this->chatkit->editMessage('123', 1, [
             'sender_id' => 'ham',
             'text' => 'hi',
             'attachment' => [
@@ -295,10 +289,8 @@ class MessageV2Test extends \Base {
         $this->assertEquals($send_msg_res['status'], 201);
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
 
-        $edit_msg_res = $this->chatkit->editMessage([
+        $edit_msg_res = $this->chatkit->editMessage($room_res['body']['id'], $send_msg_res['body']['message_id'], [
             'sender_id' => $user_id,
-            'room_id' => $room_res['body']['id'],
-            'message_id' => $send_msg_res['body']['message_id'],
             'text' => 'edited-text'
         ]);
         $this->assertEquals($edit_msg_res['status'], 204);
@@ -331,10 +323,8 @@ class MessageV2Test extends \Base {
         $this->assertEquals($send_msg_res['status'], 201);
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
 
-        $edit_msg_res = $this->chatkit->editMessage([
+        $edit_msg_res = $this->chatkit->editMessage($room_res['body']['id'], $send_msg_res['body']['message_id'], [
             'sender_id' => $user_id,
-            'room_id' => $room_res['body']['id'],
-            'message_id' => $send_msg_res['body']['message_id'],
             'text' => 'edited-text',
             'attachment' => [
                 'resource_link' => 'https://placekitten.com/200/300',

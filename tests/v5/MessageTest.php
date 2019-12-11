@@ -111,10 +111,8 @@ class MessageTest extends \Base {
         $this->assertEquals($send_msg_res['status'], 201);
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
 
-        $edit_msg_res = $this->chatkit->editMultipartMessage([
+        $edit_msg_res = $this->chatkit->editMultipartMessage($room_id, $send_msg_res['body']['message_id'], [
             'sender_id' => $user_id,
-            'room_id' => $room_id,
-            'message_id' => $send_msg_res['body']['message_id'],
             'parts' => $parts
         ]);
         $this->assertEquals($edit_msg_res['status'], 204);
@@ -131,24 +129,18 @@ class MessageTest extends \Base {
         ];
 
         $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
-        $this->chatkit->editMultipartMessage([ 'sender_id' => 'user_id',
-                                               'room_id' => 42,
-                                               'message_id' => 42,
+        $this->chatkit->editMultipartMessage(42, 42, [ 'sender_id' => 'user_id',
                                                'parts' => $good_parts
         ]);
 
         $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
-        $this->chatkit->editMultipartMessage([ 'sender_id' => 42,
-                                               'room_id' => 'room_id',
-                                               'message_id' => 42,
-                                               'parts' => $good_parts
+        $this->chatkit->editMultipartMessage('room_id', 42, [ 'sender_id' => 42,
+                                                              'parts' => $good_parts
         ]);
 
         $this->expectException(Chatkit\Exceptions\TypeMismatchException::class);
-        $this->chatkit->editMultipartMessage([ 'sender_id' => 'user_id',
-                                               'room_id' => 'room_id',
-                                               'message_id' => 42,
-                                               'parts' => $bad_parts
+        $this->chatkit->editMultipartMessage('room_id', 42, [ 'sender_id' => 'user_id',
+                                                              'parts' => $bad_parts
         ]);
     }
 
@@ -179,10 +171,8 @@ class MessageTest extends \Base {
         $this->assertEquals($send_msg_res['status'], 201);
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
 
-        $edit_msg_res = $this->chatkit->editMultipartMessage([
+        $edit_msg_res = $this->chatkit->editMultipartMessage($room_id, $send_msg_res['body']['message_id'], [
             'sender_id' => $user_id,
-            'room_id' => $room_id,
-            'message_id' => $send_msg_res['body']['message_id'],
             'parts' => $parts
         ]);
         $this->assertEquals($edit_msg_res['status'], 204);
@@ -201,10 +191,8 @@ class MessageTest extends \Base {
         $this->assertEquals($send_msg_res['status'], 201);
         $this->assertArrayHasKey('message_id', $send_msg_res['body']);
 
-        $edit_msg_res = $this->chatkit->editSimpleMessage([
+        $edit_msg_res = $this->chatkit->editSimpleMessage($room_id, $send_msg_res['body']['message_id'], [
             'sender_id' => $user_id,
-            'room_id' => $room_id,
-            'message_id' => $send_msg_res['body']['message_id'],
             'text' => 'testing'
         ]);
         $this->assertEquals($edit_msg_res['status'], 204);
