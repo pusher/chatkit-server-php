@@ -753,17 +753,22 @@ class Chatkit
         ]);
     }
 
-    public function editMessage($options)
+    public function editMessage($room_id, $message_id, $options)
     {
+        verify([ROOM_ID,MESSAGE_ID], ['room_id' => $room_id, 'message_id' => $message_id]);
         verify([SENDER_ID,
-                ROOM_ID,
-                MESSAGE_ID,
                 [ 'text' => [
                     'type' => 'string',
                     'missing_message' =>
                     'You must provide some text for the message' ]
                 ]
         ], $options);
+        if (isset($options['room_id'])) {
+          throw new UnexpectedArgumentException('a messages room ids cannot be edited');
+        }
+        if (isset($options['message_id'])) {
+          throw new UnexpectedArgumentException('a messages id cannot be edited');
+        }
 
         $body = array(
             'text' => $options['text']
@@ -787,8 +792,7 @@ class Chatkit
         }
 
         $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
-        $room_id = rawurlencode($options['room_id']);
-        $message_id = $options['message_id'];
+        $room_id = rawurlencode($room_id);
 
         return $this->apiRequestV2([
             'method' => 'PUT',
@@ -798,7 +802,7 @@ class Chatkit
         ]);
     }
 
-    public function editSimpleMessage($options)
+    public function editSimpleMessage($room_id, $message_id, $options)
     {
         verify([ [ 'text' => [
             'type' => 'string',
@@ -810,24 +814,29 @@ class Chatkit
                                 'content' => $options['text'] ]
         ];
         unset($options['text']);
-        return $this->editMultipartMessage($options);
+        return $this->editMultipartMessage($room_id, $message_id, $options);
     }
 
-    public function editMultipartMessage($options)
+    public function editMultipartMessage($room_id, $message_id, $options)
     {
+        verify([ROOM_ID,MESSAGE_ID], ['room_id' => $room_id, 'message_id' => $message_id]);
         verify([SENDER_ID,
-                ROOM_ID,
-                MESSAGE_ID,
                 [ 'parts' => [
                     'type' => 'non_empty_array',
                     'missing_message' =>
                     'You must provide a non-empty parts array' ]
                 ]
         ], $options);
+        if (isset($options['room_id'])) {
+          throw new UnexpectedArgumentException('a messages room id cannot be edited');
+        }
+        if (isset($options['message_id'])) {
+          throw new UnexpectedArgumentException('a message id cannot be edited');
+        }
 
         // this assumes the token lives long enough to finish all S3 uploads
         $token = $this->getServerToken([ 'user_id' => $options['sender_id'] ])['token'];
-        $room_id = rawurlencode($options['room_id']);
+        $room_id = rawurlencode($room_id);
 
         foreach($options['parts'] as &$part) {
             verify([ [ 'type' => [ 'type' => 'string',
@@ -850,7 +859,6 @@ class Chatkit
             }
 
         }
-        $message_id = $options['message_id'];
         return $this->apiRequest([
             'method' => 'PUT',
             'path' => "/rooms/$room_id/messages/$message_id",
