@@ -4,6 +4,7 @@ namespace Chatkit;
 
 use Chatkit\Exceptions\ChatkitException;
 use Chatkit\Exceptions\ConfigurationException;
+use Chatkit\Exceptions\ConnectionException;
 use Chatkit\Exceptions\ConnectionException as ConnectionExceptionAlias;
 use Chatkit\Exceptions\MissingArgumentException;
 use Chatkit\Exceptions\TypeMismatchException;
@@ -328,10 +329,12 @@ class Chatkit
     }
 
     /**
+     * Delete a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -352,10 +355,12 @@ class Chatkit
     }
 
     /**
+     * Asynchronously delete a user.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -376,10 +381,12 @@ class Chatkit
     }
 
     /**
+     * Check the status of a user being asynchronously deleted.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -400,10 +407,12 @@ class Chatkit
     }
 
     /**
+     * Get a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -457,10 +466,12 @@ class Chatkit
     }
 
     /**
+     * Get users by their Chatkit id.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -542,10 +553,12 @@ class Chatkit
     }
 
     /**
+     * Updates a Room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -581,10 +594,12 @@ class Chatkit
     }
 
     /**
+     * Delete a room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -605,10 +620,12 @@ class Chatkit
     }
 
     /**
+     * Asynchronously delete a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -629,10 +646,12 @@ class Chatkit
     }
 
     /**
+     * Get a Room with a provided ID
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -653,10 +672,12 @@ class Chatkit
     }
 
     /**
+     * Get rooms by ID, paged 100 at a time.
+     *
      * @param array $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -716,10 +737,12 @@ class Chatkit
     }
 
     /**
+     * Add a set of users to a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -744,10 +767,12 @@ class Chatkit
     }
 
     /**
+     * Remove a set of users from a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -784,7 +809,7 @@ class Chatkit
      *              • direction (string|optional): Order of messages - one of newer or older
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -817,10 +842,12 @@ class Chatkit
     }
 
     /**
+     * Send a message to a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -869,13 +896,15 @@ class Chatkit
     }
 
     /**
+     * Send a simple text based message to a room.
+     *
      * @param $options
      * @return array
-     * @throws ChatkitException
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
+     * @throws ChatkitException
      * @throws UploadException
      */
     public function sendSimpleMessage($options)
@@ -894,14 +923,16 @@ class Chatkit
     }
 
     /**
+     * Send a multi-part message to a room.
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
-     * @throws UploadException
      * @throws ChatkitException
+     * @throws UploadException
      */
     public function sendMultipartMessage($options)
     {
@@ -949,10 +980,12 @@ class Chatkit
     }
 
     /**
+     * Fetch a Multipart Messages
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1131,10 +1164,12 @@ class Chatkit
     }
 
     /**
+     * Delete a Message from a room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1162,10 +1197,12 @@ class Chatkit
     // Roles and permissions API
 
     /**
+     * Create a global role
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1177,10 +1214,12 @@ class Chatkit
     }
 
     /**
+     * Create a role for a room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1192,10 +1231,12 @@ class Chatkit
     }
 
     /**
+     * Delete a global role
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1207,10 +1248,12 @@ class Chatkit
     }
 
     /**
+     * Delete a role for a room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1222,10 +1265,12 @@ class Chatkit
     }
 
     /**
+     * Assign a global role to a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1236,10 +1281,12 @@ class Chatkit
     }
 
     /**
+     * Assign a room role to a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1253,9 +1300,11 @@ class Chatkit
     }
 
     /**
+     * Get available roles
+     *
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1270,10 +1319,12 @@ class Chatkit
     }
 
     /**
+     * Get roles that a user has
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1294,10 +1345,12 @@ class Chatkit
     }
 
     /**
+     * Remove a global role from a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1308,10 +1361,12 @@ class Chatkit
     }
 
     /**
+     * Remove a room role from a user
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1325,10 +1380,12 @@ class Chatkit
     }
 
     /**
+     * Get permissions for a global role
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
@@ -1340,9 +1397,11 @@ class Chatkit
     }
 
     /**
+     * Get permissions for a room role
+     *
      * @param $options
      * @return array
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ConfigurationException
@@ -1355,9 +1414,11 @@ class Chatkit
     }
 
     /**
+     * Update permissions for a global role
+     *
      * @param $options
      * @return array
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ConfigurationException
@@ -1370,9 +1431,11 @@ class Chatkit
     }
 
     /**
+     * Update permissions for a room role
+     *
      * @param $options
      * @return array
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ConfigurationException
@@ -1387,10 +1450,12 @@ class Chatkit
     // Cursors API
 
     /**
+     * Get the read cursor for a user in a given room
+     *
      * @param $options
      * @return array
      * @throws ConfigurationException
-     * @throws ConnectionExceptionAlias
+     * @throws ConnectionException
      * @throws MissingArgumentException
      * @throws TypeMismatchException
      * @throws ChatkitException
